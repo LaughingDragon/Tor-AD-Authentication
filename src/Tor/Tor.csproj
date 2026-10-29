@@ -1,0 +1,32 @@
+<!-- Copyright (c) 2026 Liam P. Ward. Licensed under the MIT License; see LICENSE in the repository root. SPDX-License-Identifier: MIT -->
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Description>Tor: Active Directory sign-in for Orchard Core.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="OrchardCore.Module.Targets" />
+    <PackageReference Include="OrchardCore.DisplayManagement" />
+    <PackageReference Include="OrchardCore.ContentManagement" />
+    <PackageReference Include="OrchardCore.Users.Core" />
+    <PackageReference Include="OrchardCore.Media.Core" />
+    <PackageReference Include="OrchardCore.AuditTrail.Abstractions" />
+    <PackageReference Include="OrchardCore.Workflows.Abstractions" />
+    <PackageReference Include="OrchardCore.Media" />
+    <PackageReference Include="System.DirectoryServices.Protocols" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Tor.Tests" />
+  </ItemGroup>
+
+</Project>

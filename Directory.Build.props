@@ -1,0 +1,20 @@
+<!-- Copyright (c) 2026 Liam P. Ward. Licensed under the MIT License; see LICENSE in the repository root. SPDX-License-Identifier: MIT -->
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Authors>Liam P. Ward</Authors>
+    <Company>Liam P. Ward</Company>
+    <Copyright>Copyright (c) 2026 Liam P. Ward. MIT License.</Copyright>
+    <Version>0.1.0-preview</Version>
+    <RepositoryUrl>https://github.com/LaughingDragon/Tor-AD-Authentication</RepositoryUrl>
+
+    <!-- NuGet: pinned central versions, committed lock files, audit on -->
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <RestoreLockedMode Condition="'$(ContinuousIntegrationBuild)' == 'true' Or '$(Configuration)' == 'Release'">true</RestoreLockedMode>
+    <NuGetAudit>true</NuGetAudit>
+    <NuGetAuditMode>all</NuGetAuditMode>
+    <NuGetAuditLevel>low</NuGetAuditLevel>
+  </PropertyGroup>
+</Project>

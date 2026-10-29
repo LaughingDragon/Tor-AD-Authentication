@@ -1,0 +1,42 @@
+# Build output
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+artifacts/
+TestResults/
+*.nupkg
+*.snupkg
+
+# Visual Studio, Rider, VS Code
+.vs/
+.idea/
+.vscode/
+*.user
+*.suo
+*.userprefs
+*.rsuser
+*.DotSettings.user
+launchSettings.json
+
+# Orchard Core runtime data, logs and copied localization files
+App_Data/
+logs/
+Localization/
+
+# Local settings and secrets: configuration belongs on the server, never in the repository
+appsettings.*.json
+!appsettings.Example.json
+secrets.json
+*.env
+.env*
+*.pfx
+*.p12
+*.pem
+*.key
+*.cer
+*.crt
+*.snk
+*.publishsettings
+*.pubxml
+*.pubxml.user

@@ -1,0 +1,45 @@
+@* Copyright (c) 2026 Liam P. Ward. Licensed under the MIT License; see LICENSE in the repository root. SPDX-License-Identifier: MIT *@
+@model AccountProfileViewModel
+@* Fallback template for the AccountProfile shape: plain markup, no classes. A theme can override it (for example with AccountProfile.liquid). *@
+@functions {
+    static string When(DateTime? utc) => utc is { } t ? t.ToString("yyyy-MM-dd HH:mm") + " UTC" : "";
+}
+<section>
+    <h1>@(Model.DisplayName ?? Model.UserName)</h1>
+    @if (Model.IsLocal)
+    {
+        <p>Local account: no directory details</p>
+    }
+    else if (!Model.HasSnapshot)
+    {
+        <p>No directory details yet. They are read at your next sign-in.</p>
+    }
+    else
+    {
+        <p>As of your last sign-in (@When(Model.SyncedUtc))</p>
+        @if (Model.PhotoUrl != null)
+        {
+            <img src="@Model.PhotoUrl" alt="Domain picture" width="96" height="96">
+        }
+        <dl>
+            <dt>Username</dt><dd>@Model.UserName</dd>
+            <dt>Email</dt><dd>@Model.Mail</dd>
+            <dt>User principal name</dt><dd>@Model.UserPrincipalName</dd>
+            <dt>Title</dt><dd>@Model.Title</dd>
+            <dt>Department</dt><dd>@Model.Department</dd>
+            <dt>Description</dt><dd>@Model.Description</dd>
+            <dt>Telephone</dt><dd>@Model.TelephoneNumber</dd>
+            <dt>Mobile</dt><dd>@Model.Mobile</dd>
+            <dt>Office</dt><dd>@Model.Office</dd>
+            <dt>Account created</dt><dd>@When(Model.WhenCreatedUtc)</dd>
+            <dt>Password last set</dt><dd>@When(Model.PasswordLastSetUtc)</dd>
+            <dt>Password expires</dt><dd>@(Model.PasswordNeverExpires ? "Never" : When(Model.PasswordExpiresUtc))</dd>
+            <dt>Last logon</dt><dd>@When(Model.LastLogonUtc)</dd>
+            <dt>Account expires</dt><dd>@(Model.AccountNeverExpires ? "Never" : When(Model.AccountExpiresUtc))</dd>
+            <dt>Account enabled</dt><dd>@(Model.Enabled ? "Yes" : "No")</dd>
+            <dt>Home directory</dt><dd>@Model.HomeDirectory</dd>
+            <dt>Groups</dt><dd>@string.Join(", ", Model.Groups)</dd>
+            <dt>Managed computers</dt><dd>@string.Join(", ", Model.ManagedComputers)</dd>
+        </dl>
+    }
+</section>

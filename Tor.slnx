@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Tor/Tor.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Tor.Tests/Tor.Tests.csproj" />
+  </Folder>
+</Solution>

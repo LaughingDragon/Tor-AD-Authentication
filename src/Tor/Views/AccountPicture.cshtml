@@ -1,0 +1,12 @@
+@* Copyright (c) 2026 Liam P. Ward. Licensed under the MIT License; see LICENSE in the repository root. SPDX-License-Identifier: MIT *@
+@model AccountPictureViewModel
+@* Fallback template for the AccountPicture shape: plain markup, no classes. A theme can override it (for example with AccountPicture.liquid). *@
+<section id="account-picture">
+    <h2>Change domain picture</h2>
+    <form method="post" action="@Model.ActionUrl" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <p><label for="Picture">Picture (JPEG or PNG, at most 2 MB)</label><br><input id="Picture" name="Picture" type="file" accept="@Model.Accept" required></p>
+        <p><label for="PictureCurrentPassword">Current password</label><br><input id="PictureCurrentPassword" name="CurrentPassword" type="password" autocomplete="current-password" maxlength="@Model.MaxPasswordLength" required></p>
+        <p><button type="submit">Change picture</button></p>
+    </form>
+</section>

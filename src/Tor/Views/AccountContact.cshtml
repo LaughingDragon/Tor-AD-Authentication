@@ -1,0 +1,30 @@
+@* Copyright (c) 2026 Liam P. Ward. Licensed under the MIT License; see LICENSE in the repository root. SPDX-License-Identifier: MIT *@
+@model AccountContactViewModel
+@* Fallback template for the AccountContact shape: plain markup, no classes. A theme can override it (for example with AccountContact.liquid). *@
+<section id="account-contact">
+    <h2>Change contact details</h2>
+    <form method="post" action="@Model.ActionUrl">
+        @Html.AntiForgeryToken()
+        <p><label for="TelephoneNumber">Phone</label><br><input id="TelephoneNumber" name="TelephoneNumber" type="tel" autocomplete="tel" maxlength="@Model.MaxPhoneLength" value="@Model.TelephoneNumber"></p>
+        <p><label for="Mobile">Mobile</label><br><input id="Mobile" name="Mobile" type="tel" autocomplete="tel" maxlength="@Model.MaxPhoneLength" value="@Model.Mobile"></p>
+        @if (Model.OfficeEnabled)
+        {
+        <p>
+            <label for="Office">Location</label><br>
+            <select id="Office" name="Office">
+                <option value="">(none)</option>
+                @if (Model.OfficeIsUnlisted)
+                {
+                    <option value="@Model.Office" selected>@Model.Office (current)</option>
+                }
+                @foreach (var location in Model.OfficeOptions)
+                {
+                    <option value="@location" selected="@(location == Model.Office)">@location</option>
+                }
+            </select>
+        </p>
+        }
+        <p><label for="ContactCurrentPassword">Current password</label><br><input id="ContactCurrentPassword" name="CurrentPassword" type="password" autocomplete="current-password" maxlength="@Model.MaxPasswordLength" required></p>
+        <p><button type="submit">Save contact details</button></p>
+    </form>
+</section>

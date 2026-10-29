@@ -1,0 +1,19 @@
+@* Copyright (c) 2026 Liam P. Ward. Licensed under the MIT License; see LICENSE in the repository root. SPDX-License-Identifier: MIT *@
+@model AccountSitePictureViewModel
+@* Fallback template for the AccountSitePicture shape: plain markup, no classes. A theme can override it (for example with AccountSitePicture.liquid). *@
+<section id="account-site-picture">
+    <h2>Picture on this site</h2>
+    @if (Model.PictureUrl != null)
+    {
+        <img src="@Model.PictureUrl" alt="Your picture on this site" width="96" height="96">
+    }
+    <form method="post" action="@Model.ActionUrl" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <p><label for="SitePicture">Picture (JPEG or PNG, at most 2 MB)</label><br><input id="SitePicture" name="Picture" type="file" accept="@Model.Accept" required></p>
+        <p><button type="submit">Change picture</button></p>
+    </form>
+    @if (Model.PictureUrl != null)
+    {
+        <form method="post" action="@Model.RemoveUrl">@Html.AntiForgeryToken()<button type="submit">Remove picture</button></form>
+    }
+</section>
