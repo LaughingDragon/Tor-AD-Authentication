@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Routing;
 using OrchardCore.DisplayManagement.Notify;
 using OrchardCore.Modules.Manifest;
+using Tor.Account;
 using Tor.Controllers;
 using Tor.Directory;
 using Tor.Filters;
@@ -208,6 +209,20 @@ public class HardeningTests
         Assert.Contains(log.Messages, m => m.Contains("UseLdaps is false", StringComparison.Ordinal));
         Assert.Empty(TorOptionsCheck.Problems(With("Domain=corp.example.com")));
     }
+
+    // ---- item 6: at most 16 million pixels (about 64 MB decoded), checked from the header before decoding
+    [Theory]
+    [InlineData(5_000, 4_000)]
+    [InlineData(8_000, 5_000)]
+    [InlineData(12_000, 1_400)]
+    public void A_picture_over_16_million_pixels_is_refused_before_decoding(int width, int height) =>
+        Assert.Equal(PictureOutcome.TooManyPixels, PictureProcessor.Process(PictureTests.PngWithHeaderSize(width, height)).Outcome);
+
+    [Theory]
+    [InlineData(4_000, 4_000)]
+    [InlineData(12_000, 1_333)]
+    public void A_picture_of_16_million_pixels_or_fewer_gets_past_the_size_check(int width, int height) =>
+        Assert.NotEqual(PictureOutcome.TooManyPixels, PictureProcessor.Process(PictureTests.PngWithHeaderSize(width, height)).Outcome);
 
     /// <summary>A directory sign-in with stand-ins, as in <see cref="LoginFilterTests"/>.</summary>
     private sealed class Rig

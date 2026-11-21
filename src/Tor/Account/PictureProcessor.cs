@@ -35,8 +35,8 @@ public static class PictureProcessor
     public const int Size = 96;
     public const int MaxOutputBytes = DirectorySnapshot.MaxPhotoBytes;
 
-    // 40 million pixels (e.g. 8000 x 5000) is far beyond any photo meant for a 96 pixel picture
-    public const long MaxPixels = 40_000_000;
+    // 16 million pixels (e.g. 4000 x 4000, about 64 MB once decoded) is far beyond any photo meant for a 96 pixel picture
+    public const long MaxPixels = 16_000_000;
     public const int MaxSide = 12_000;
 
     private static readonly DecoderOptions _decoderOptions = new()
@@ -111,7 +111,7 @@ public static class PictureProcessor
         PictureOutcome.Missing => "Choose a picture to upload.",
         PictureOutcome.TooLarge => "The picture can be at most 2 MB.",
         PictureOutcome.WrongType => "The picture must be a JPEG or PNG file.",
-        PictureOutcome.TooManyPixels => "The picture is too large in pixels. Use one of at most 12,000 pixels on each side.",
+        PictureOutcome.TooManyPixels => "The picture is too large in pixels. Use one of at most 16 million pixels (for example 4,000 by 4,000) and 12,000 pixels on each side.",
         _ => "The picture could not be read. Try another JPEG or PNG file.",
     };
 }

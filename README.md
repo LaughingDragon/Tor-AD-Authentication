@@ -284,7 +284,7 @@ The page shows the snapshot "as of your last sign-in"; it is not read live.
 | Action | Writes | Notes |
 |---|---|---|
 | Change domain password | `unicodePwd` | LDAPS only. The domain's password policy applies. The Orchard session stays signed in. |
-| Change domain picture | `thumbnailPhoto` | JPEG or PNG up to 2 MB, at most 12,000 pixels a side and 40 million pixels; re-encoded to a 96×96 JPEG without metadata. |
+| Change domain picture | `thumbnailPhoto` | JPEG or PNG up to 2 MB, at most 12,000 pixels a side and 16 million pixels; re-encoded to a 96×96 JPEG without metadata. |
 | Change contact details | `telephoneNumber`, `mobile`, `physicalDeliveryOfficeName` | Only values that differ are written. Phones: digits, spaces and `+ - ( ) .`, at most 64 characters. Location: one of the configured choices; with no choices configured there is no Location field and it is never written. |
 | Picture on this site | Orchard Media library | 256×256 JPEG in `site-profile/{user id}/` with a random file name; no domain bind. Available to local accounts too. Can be removed. |
 

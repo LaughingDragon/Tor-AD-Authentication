@@ -194,7 +194,7 @@ public class PictureTests
     }
 
     // a valid 1x1 PNG whose IHDR claims another size (CRC fixed up), so only the header is ever read
-    private static byte[] PngWithHeaderSize(int width, int height)
+    internal static byte[] PngWithHeaderSize(int width, int height)
     {
         var png = Png(1, 1);
         // signature (8), length (4), "IHDR" (4), then width and height big-endian
