@@ -1,0 +1,54 @@
+# Copyright (c) 2026 Liam P. Ward. Licensed under the MIT License; see LICENSE in the repository root.
+# SPDX-License-Identifier: MIT
+#
+# CodeQL analysis of the C# code. Every action is pinned to a full commit SHA (the release is in the
+# comment). The workflow default is contents: read; the analyze job also needs security-events: write,
+# which is the permission CodeQL uses to upload its results to the Security tab.
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "17 4 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: Analyze C#
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea # v4.39.4
+        with:
+          languages: csharp
+          build-mode: manual
+          queries: security-extended
+
+      - name: Build
+        run: |
+          dotnet restore Tor.slnx --locked-mode
+          dotnet build Tor.slnx --no-restore --configuration Release -p:ContinuousIntegrationBuild=true
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea # v4.39.4
+        with:
+          category: "/language:csharp"

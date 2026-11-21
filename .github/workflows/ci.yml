@@ -1,0 +1,55 @@
+# Copyright (c) 2026 Liam P. Ward. Licensed under the MIT License; see LICENSE in the repository root.
+# SPDX-License-Identifier: MIT
+#
+# Build and test on Ubuntu and Windows. Restore is locked to the committed lock files; the NuGet audit
+# is listed at the end. Every action is pinned to a full commit SHA (the release is in the comment).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build and test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    env:
+      DOTNET_NOLOGO: "true"
+      DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "true"
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore (locked)
+        run: dotnet restore Tor.slnx --locked-mode
+
+      - name: Build
+        run: dotnet build Tor.slnx --no-restore --configuration Release -p:ContinuousIntegrationBuild=true
+
+      - name: Test
+        run: dotnet test Tor.slnx --no-build --configuration Release
+
+      - name: List vulnerable packages
+        run: dotnet list Tor.slnx package --vulnerable --include-transitive
