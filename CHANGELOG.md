@@ -29,6 +29,9 @@ Fixes from the line-by-line security review of 0.1.0-preview, and packaging.
   and `DOMAIN\` forms of the same account. An attempt is checked and counted in one step, so
   parallel attempts no longer pass the limit. Keys are hashed (bounded whatever was typed), the
   table has a hard cap of 50,000 windows, and a full table no longer costs a scan on every failure.
+- **Break-glass answer:** a refused break-glass sign-in now gets the same answer as a refused
+  directory sign-in ("Invalid login attempt." and a redirect to the login page) instead of Orchard's
+  login page with its own message, so a break-glass name can no longer be told apart.
 
 ## 0.1.0-preview
 

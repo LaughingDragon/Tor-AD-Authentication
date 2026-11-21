@@ -2,9 +2,11 @@
 // SPDX-License-Identifier: MIT
 // The fixes from the line-by-line security review of 0.1.0-preview, one section per review item.
 using System.Reflection;
+using System.Reflection.Emit;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Routing;
@@ -319,6 +321,75 @@ public class HardeningTests
         await r.SignInAsync();
 
         Assert.False(r.Throttle.IsBlocked("bob", "192.0.2.10"));
+    }
+
+    // ---- item 11: a failed break-glass sign-in gives the same answer as a failed directory sign-in
+    private static ControllerActionDescriptor OrchardLoginPost()
+    {
+        // a stand-in with the name and action of Orchard's AccountController, which is all the filter looks at
+        var module = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName("OrchardLoginStandIn"), AssemblyBuilderAccess.Run).DefineDynamicModule("m");
+        var type = module.DefineType("OrchardCore.Users.Controllers.AccountController", TypeAttributes.Public);
+        type.DefineMethod("LoginPOST", MethodAttributes.Public, typeof(void), Type.EmptyTypes).GetILGenerator().Emit(OpCodes.Ret);
+        var created = type.CreateType();
+        return new ControllerActionDescriptor { ControllerTypeInfo = created.GetTypeInfo(), MethodInfo = created.GetMethod("LoginPOST")! };
+    }
+
+    /// <summary>Runs the filter on a login POST; Orchard's own action answers with <paramref name="orchard"/>.</summary>
+    private static async Task<(ActionExecutingContext Before, ActionExecutedContext? After)> PostLoginAsync(Rig r, string userName, IActionResult orchard, string? returnUrl = null)
+    {
+        var http = new DefaultHttpContext();
+        http.Connection.RemoteIpAddress = System.Net.IPAddress.Parse("192.0.2.20");
+        http.Request.ContentType = "application/x-www-form-urlencoded";
+        http.Request.Form = new FormCollection(new() { ["LoginForm.UserName"] = userName, ["LoginForm.Password"] = "Pa55-word-never-logged!" });
+        if (returnUrl is not null)
+        {
+            http.Request.QueryString = QueryString.Create("returnUrl", returnUrl);
+        }
+
+        var action = new ActionContext(http, new RouteData(), OrchardLoginPost());
+        var before = new ActionExecutingContext(action, [], new Dictionary<string, object?>(), new object());
+        ActionExecutedContext? after = null;
+        await r.Filter().OnActionExecutionAsync(before, () => Task.FromResult(after = new ActionExecutedContext(action, [], new object()) { Result = orchard }));
+        return (before, after);
+    }
+
+    [Fact]
+    public async Task A_failed_break_glass_sign_in_looks_like_a_failed_directory_sign_in()
+    {
+        var r = new Rig();
+        r.Directory.Result = new DirectoryResult(DirectoryOutcome.BadCredentials);
+        var (directory, _) = await PostLoginAsync(r, "alice", new ViewResult(), "/docs");
+        var directoryMessages = r.Notifier.Messages.ToList();
+        r.Notifier.Messages.Clear();
+
+        var (_, local) = await PostLoginAsync(r, "breakglass", new ViewResult(), "/docs");
+
+        var expected = Assert.IsType<LocalRedirectResult>(directory.Result);
+        var actual = Assert.IsType<LocalRedirectResult>(local!.Result);
+        Assert.Equal((expected.Url, expected.Permanent, expected.PreserveMethod), (actual.Url, actual.Permanent, actual.PreserveMethod));
+        Assert.Equal(directoryMessages, r.Notifier.Messages);
+    }
+
+    [Fact]
+    public async Task Orchard_raises_the_failure_event_for_a_break_glass_failure_so_Tor_does_not_raise_it_again()
+    {
+        var r = new Rig();
+
+        await PostLoginAsync(r, "breakglass", new ViewResult());
+
+        Assert.Equal(0, r.Journal.Count("LoggingInFailed"));
+    }
+
+    [Fact]
+    public async Task A_good_break_glass_sign_in_and_a_two_factor_step_keep_Orchards_answer()
+    {
+        var r = new Rig();
+        var success = new LocalRedirectResult("~/admin");
+        var twoFactor = new RedirectToActionResult("LoginWithTwoFactorAuthentication", "TwoFactorAuthentication", null);
+
+        Assert.Same(success, (await PostLoginAsync(r, "breakglass", success)).After!.Result);
+        Assert.Same(twoFactor, (await PostLoginAsync(r, "breakglass", twoFactor)).After!.Result);
+        Assert.Empty(r.Notifier.Messages);
     }
 
     /// <summary>A directory sign-in with stand-ins, as in <see cref="LoginFilterTests"/>.</summary>

@@ -108,6 +108,14 @@ public sealed class DirectoryLoginFilter : IAsyncActionFilter
             {
                 // the attempt was counted when it began
                 _audit.Failure(typed, client, "local", "local login refused");
+
+                // Orchard re-renders its login view (200) where a directory failure is a redirect (302): give the one
+                // failure answer instead, so a break-glass name cannot be told apart. Orchard has already raised its
+                // failure event. Any other answer (for example its two-factor step) is kept.
+                if (executed.Exception is null && executed.Result is ViewResult)
+                {
+                    executed.Result = await FailureAnswerAsync(returnUrl);
+                }
             }
 
             return;
@@ -339,6 +347,12 @@ public sealed class DirectoryLoginFilter : IAsyncActionFilter
             await RaiseAsync(e => e.LoggingInFailedAsync((IUser)user), "LoggingInFailedAsync");
         }
 
+        return await FailureAnswerAsync(returnUrl);
+    }
+
+    // what the user sees after any failure: Orchard's generic message and the login page again
+    private async Task<IActionResult> FailureAnswerAsync(string? returnUrl)
+    {
         await _notifier.ErrorAsync(H["Invalid login attempt."]);
         var target = !string.IsNullOrEmpty(returnUrl) && IsLocalUrl(returnUrl)
             ? "~/Login?ReturnUrl=" + Uri.EscapeDataString(returnUrl)

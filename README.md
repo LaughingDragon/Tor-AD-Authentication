@@ -115,9 +115,13 @@ How a directory sign-in compares with Orchard Core 3.0.1's own password login
 | Success: cookie (optionally persistent, "Remember me"), `LoggedInAsync`, `UserLoggedInEvent` workflow event | Cookie (never persistent; "Remember me" is ignored), `LoggedInAsync` once, `UserLoggedInEvent` once. |
 | Failure: "Invalid login attempt.", `LoggingInFailedAsync` once | The same message and event, for every cause. |
 
-Local break-glass accounts (`LocalAccounts`) go through Orchard's own login unchanged and get all of
+Local break-glass accounts (`LocalAccounts`) go through Orchard's own login and get all of
 Orchard's checks. When Tor's throttle blocks one, Orchard's login does not run, and Tor raises
-`LoggingInFailedAsync` itself.
+`LoggingInFailedAsync` itself. When Orchard refuses one (it would show its login page again, with
+its own message, such as "The account is locked out"), Tor answers as for a directory failure
+instead: "Invalid login attempt." and a redirect to the login page, so a break-glass name cannot
+be told apart from other names. Orchard has already raised its failure event. A redirect to
+Orchard's two-factor step is kept.
 
 While Tor is enabled it also sets Orchard's sign-in cookie, for every sign-in, to
 `HttpOnly`, `Secure` (HTTPS only), `SameSite=Lax`, with an 8-hour sliding expiry. While it is
