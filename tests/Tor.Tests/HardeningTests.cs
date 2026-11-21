@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: MIT
 // The fixes from the line-by-line security review of 0.1.0-preview, one section per review item.
 using System.Reflection;
-using System.Security.Claims;
 using System.Reflection.Emit;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
