@@ -140,6 +140,75 @@ public class HardeningTests
     [InlineData("alice \U0001F600")]
     public void Ordinary_letters_and_symbols_are_kept(string typed) => Assert.Equal(typed, SignInAudit.Clean(typed));
 
+    // ---- item 14: options are checked, and a bad configuration fails closed
+    public static TheoryData<string> BadSettings() =>
+    [
+        "FailureWindowMinutes=0", "FailureWindowMinutes=-5", "MaxFailuresPerUser=0", "MaxFailuresPerClient=-1",
+        "TimeoutSeconds=0", "TimeoutSeconds=61", "Servers=", "Servers= ", "NetBiosName=", "Domain=",
+    ];
+
+    private static TorOptions With(string setting)
+    {
+        var o = new TorOptions { Domain = "corp.example.com", NetBiosName = "CORP", Servers = ["dc.invalid"], LocalAccounts = ["breakglass"] };
+        var (name, value) = (setting.Split('=')[0], setting.Split('=')[1]);
+        switch (name)
+        {
+            case "FailureWindowMinutes": o.FailureWindowMinutes = int.Parse(value, System.Globalization.CultureInfo.InvariantCulture); break;
+            case "MaxFailuresPerUser": o.MaxFailuresPerUser = int.Parse(value, System.Globalization.CultureInfo.InvariantCulture); break;
+            case "MaxFailuresPerClient": o.MaxFailuresPerClient = int.Parse(value, System.Globalization.CultureInfo.InvariantCulture); break;
+            case "TimeoutSeconds": o.TimeoutSeconds = int.Parse(value, System.Globalization.CultureInfo.InvariantCulture); break;
+            case "Servers": o.Servers = value.Length == 0 ? [] : [value]; break;
+            case "NetBiosName": o.NetBiosName = value; break;
+            case "Domain": o.Domain = value; break;
+        }
+
+        return o;
+    }
+
+    [Theory]
+    [MemberData(nameof(BadSettings))]
+    public async Task A_bad_setting_refuses_every_directory_sign_in_without_contacting_the_domain(string setting)
+    {
+        var r = new Rig(With(setting));
+
+        for (var i = 0; i < 3; i++)
+        {
+            Assert.Equal("~/Login", Assert.IsType<LocalRedirectResult>(await r.SignInAsync()).Url);
+        }
+
+        Assert.Equal(0, r.Journal.Count("bind"));
+        Assert.Equal(3, r.Journal.Count("LoggingInFailed"));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-5)]
+    public void A_zero_or_negative_window_does_not_switch_the_throttle_off(int minutes)
+    {
+        var throttle = new LoginThrottle(Microsoft.Extensions.Options.Options.Create(With("FailureWindowMinutes=" + minutes)), TimeProvider.System);
+
+        for (var i = 0; i < 5; i++)
+        {
+            throttle.RecordFailure("local:breakglass", "192.0.2.1");
+        }
+
+        Assert.True(throttle.IsBlocked("local:breakglass", "192.0.2.2"));
+    }
+
+    [Fact]
+    public async Task Problems_are_logged_once_at_tenant_start_and_plain_LDAP_is_warned()
+    {
+        var bad = With("Servers=");
+        bad.UseLdaps = false;
+        var log = new ListLogger();
+
+        await new RoleMappingLog(RoleMapper.From(bad), Microsoft.Extensions.Options.Options.Create(bad), log).ActivatedAsync();
+
+        Assert.Contains(log.Messages, m => m.Contains("Servers", StringComparison.Ordinal) && m.Contains("every directory sign-in is refused", StringComparison.Ordinal));
+        Assert.Contains(log.Messages, m => m.Contains("UseLdaps is false", StringComparison.Ordinal));
+        Assert.Empty(TorOptionsCheck.Problems(With("Domain=corp.example.com")));
+    }
+
     /// <summary>A directory sign-in with stand-ins, as in <see cref="LoginFilterTests"/>.</summary>
     private sealed class Rig
     {

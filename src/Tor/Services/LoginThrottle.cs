@@ -23,10 +23,11 @@ public sealed class LoginThrottle
         _time = time;
     }
 
-    private TimeSpan Length => TimeSpan.FromMinutes(_options.FailureWindowMinutes);
+    // a setting below 1 is a configuration error (refused for directory sign-ins); here it never switches the throttle off
+    private TimeSpan Length => TimeSpan.FromMinutes(Math.Max(1, _options.FailureWindowMinutes));
 
     public bool IsBlocked(string userKey, string clientKey) =>
-        Count("u:" + userKey) >= _options.MaxFailuresPerUser || Count("c:" + clientKey) >= _options.MaxFailuresPerClient;
+        Count("u:" + userKey) >= Math.Max(1, _options.MaxFailuresPerUser) || Count("c:" + clientKey) >= Math.Max(1, _options.MaxFailuresPerClient);
 
     public void RecordFailure(string userKey, string clientKey)
     {

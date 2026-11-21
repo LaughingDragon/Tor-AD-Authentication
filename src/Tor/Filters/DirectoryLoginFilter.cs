@@ -172,6 +172,13 @@ public sealed class DirectoryLoginFilter : IAsyncActionFilter
             return null;
         }
 
+        // a bad setting refuses every directory sign-in (logged once at tenant start); not the user's fault, so not counted
+        if (TorOptionsCheck.Problems(_options).Count > 0)
+        {
+            refusal.Reason = "Tor is not configured correctly";
+            return null;
+        }
+
         // no domain password is this long (the account forms have the same limit): refused before the throttle and the bind
         if (password.Length > AccountActions.MaxPasswordLength)
         {

@@ -19,6 +19,10 @@ Fixes from the line-by-line security review of 0.1.0-preview, and packaging.
   after a successful sign-in.
 - **Log text:** typed names in `Tor.Audit` and in Orchard's failure event also lose Unicode line and
   paragraph separators and format characters (for example U+2028, U+202E and zero-width spaces).
+- **Settings are checked:** an empty `Domain`, `NetBiosName` or `Servers`, a `TimeoutSeconds` outside
+  1 to 60, or a limit or window below 1 is logged as an error at start-up, and every directory sign-in
+  is then refused (not counted against the user) until it is fixed. The throttle no longer switches
+  off with a zero or negative window. A warning is logged at start-up when `UseLdaps` is `false`.
 
 ## 0.1.0-preview
 

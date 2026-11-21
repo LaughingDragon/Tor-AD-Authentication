@@ -222,17 +222,17 @@ Tor reads the section `OrchardCore:Tor` of the site's configuration (for example
 
 | Setting | Default | Meaning |
 |---|---|---|
-| `Domain` | (empty) | DNS name of the domain. |
+| `Domain` | (empty) | DNS name of the domain. Required. |
 | `NetBiosName` | (empty) | NetBIOS name of the domain. Required. |
 | `Servers` | (empty) | Domain controller host names, as named on their LDAPS certificates. Required. |
 | `UseLdaps` | `true` | LDAPS on port 636. When `false`, sign-in uses LDAP on port 389 with Negotiate signing and sealing, and the password change on `/account` is refused. |
-| `TimeoutSeconds` | `10` | LDAP timeout. |
+| `TimeoutSeconds` | `10` | LDAP timeout, 1 to 60 seconds. |
 | `GroupRoles` | (empty) | Group (`sAMAccountName`) → Orchard role. The sign-in gate and the only roles Tor manages. With no entries, no directory account can sign in. Entries for roles that do not exist are ignored with a warning. |
 | `AllowAdministratorMapping` | `false` | Whether an entry may map a group to `Administrator` (or to Orchard's admin role). While `false`, such entries are ignored with a warning. When `true`, a warning is logged at start-up. |
 | `LocalAccounts` | (empty) | Orchard user names that keep Orchard's password sign-in (break-glass). |
-| `MaxFailuresPerUser` | `5` | Failed sign-ins allowed per user name in the window. |
-| `MaxFailuresPerClient` | `20` | Failed sign-ins allowed per client address in the window. |
-| `FailureWindowMinutes` | `15` | Length of the throttling window. |
+| `MaxFailuresPerUser` | `5` | Failed sign-ins allowed per user name in the window; at least 1. |
+| `MaxFailuresPerClient` | `20` | Failed sign-ins allowed per client address in the window; at least 1. |
+| `FailureWindowMinutes` | `15` | Length of the throttling window, at least 1 minute. |
 | `OfficeChoices` | (empty) | Tor Account: fixed choices for the Location field. |
 | `OfficeContentType` | (empty) | Tor Account, optional: a content type whose published titles are added to the Location choices. |
 | `OfficePathPrefix` | (empty) | Tor Account, optional: with `OfficeContentType`, only items whose address starts with this path. |
@@ -246,7 +246,9 @@ Turning `AllowAdministratorMapping` off later does not take `Administrator` away
 already have it: while the flag is off, Tor no longer manages that role. Remove it by hand under
 **Security > Users** if needed.
 
-If `Servers` or `NetBiosName` is missing, every domain sign-in fails and an error is logged. Tor
+Tor checks these settings. If one is missing or out of range, Tor logs an error for each problem at
+start-up and refuses every directory sign-in until it is fixed; the break-glass accounts still work,
+and the throttle never switches off. When `UseLdaps` is `false`, a warning is logged at start-up. Tor
 does not create roles; create the mapped roles in Orchard first.
 
 Tor's audit lines use the logger name `Tor.Audit`; route that logger to a file or other target in
