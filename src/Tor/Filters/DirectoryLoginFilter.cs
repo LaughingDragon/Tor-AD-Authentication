@@ -350,10 +350,23 @@ public sealed class DirectoryLoginFilter : IAsyncActionFilter
             _options.LocalAccounts.Contains(name, StringComparer.OrdinalIgnoreCase);
     }
 
-    // same rule as Url.IsLocalUrl: one leading slash, not "//" or "/\"
-    internal static bool IsLocalUrl(string url) =>
-        url.Length > 0 && url[0] == '/' && (url.Length == 1 || (url[1] != '/' && url[1] != '\\')) ||
-        url.Length > 1 && url[0] == '~' && url[1] == '/';
+    // ASP.NET Core's own rule (Url.IsLocalUrl, which LocalRedirectResult applies again): "/" or "~/" followed by
+    // neither "/" nor "\", and no control character anywhere after it
+    internal static bool IsLocalUrl(string url)
+    {
+        var start = url.StartsWith("~/", StringComparison.Ordinal) ? 2 : url.StartsWith('/') ? 1 : 0;
+        if (start == 0)
+        {
+            return false;
+        }
+
+        if (url.Length == start)
+        {
+            return true;
+        }
+
+        return url[start] != '/' && url[start] != '\\' && !url[start..].Any(char.IsControl);
+    }
 
     private static string Describe(DirectoryOutcome outcome) => outcome switch
     {

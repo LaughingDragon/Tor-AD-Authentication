@@ -14,6 +14,9 @@ Fixes from the line-by-line security review of 0.1.0-preview, and packaging.
   sent with `Cache-Control: private, no-store` (the pictures were `private, no-cache`).
 - **Login password limit:** a password longer than 256 characters (the limit the account forms
   already had) is refused and counted as a failure before the throttle and the bind.
+- **Return address:** Tor now uses ASP.NET Core's own local-URL rule, so `~//host`, `~/\host` and
+  addresses with control characters send the user to the site root instead of causing an error
+  after a successful sign-in.
 
 ## 0.1.0-preview
 

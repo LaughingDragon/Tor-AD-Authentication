@@ -90,7 +90,7 @@ More detail on a sign-in:
    settings, is refused (see [Limitations](#limitations)). No cookie is issued.
 10. Tor signs the user in with a non-persistent cookie, raises `LoggedInAsync` once, raises Orchard's
     `UserLoggedInEvent` workflow event when Workflows is enabled, and redirects to the return URL if
-    it is local, otherwise to the site root.
+    it is local by ASP.NET Core's own rule (`Url.IsLocalUrl`), otherwise to the site root.
 
 Every failure, whatever its cause, gives the same answer: Orchard's "Invalid login attempt." and a
 redirect to the login page. Orchard's `LoggingInFailedAsync` event is raised exactly once per

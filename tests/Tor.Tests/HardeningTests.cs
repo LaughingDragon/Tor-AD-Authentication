@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Routing;
 using OrchardCore.DisplayManagement.Notify;
 using OrchardCore.Modules.Manifest;
@@ -77,6 +78,48 @@ public class HardeningTests
         await r.SignInAsync(password: new string('x', 256));
 
         Assert.Equal(256, Assert.Single(r.Directory.Passwords).Length);
+    }
+
+    // ---- item 8: the return address follows ASP.NET Core's own local-URL rule
+    [Theory]
+    [InlineData("~//evil.example")]
+    [InlineData("~/\\evil.example")]
+    [InlineData("/\t/evil.example")]
+    [InlineData("/docs\r\nX")]
+    [InlineData("~/docs\u0000")]
+    public async Task Return_addresses_ASP_NET_refuses_send_the_user_to_the_site_root(string returnUrl)
+    {
+        Assert.False(DirectoryLoginFilter.IsLocalUrl(returnUrl));
+        Assert.Equal("~/", Assert.IsType<LocalRedirectResult>(await new Rig().SignInAsync(returnUrl: returnUrl)).Url);
+    }
+
+    [Theory]
+    [InlineData("/")]
+    [InlineData("/docs?page=2")]
+    [InlineData("~/")]
+    [InlineData("~/docs")]
+    public void Local_return_addresses_are_still_used(string returnUrl) => Assert.True(DirectoryLoginFilter.IsLocalUrl(returnUrl));
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("/")]
+    [InlineData("~")]
+    [InlineData("~/")]
+    [InlineData("//evil.example")]
+    [InlineData("/\\evil.example")]
+    [InlineData("~//evil.example")]
+    [InlineData("~/\\evil.example")]
+    [InlineData("http://evil.example")]
+    [InlineData("javascript:alert(1)")]
+    [InlineData("/%2F%2Fevil.example")]
+    [InlineData("/a\u007fb")]
+    [InlineData("/a\u0085b")]
+    [InlineData(" /docs")]
+    public void Tor_and_ASP_NET_agree_on_what_is_local(string url)
+    {
+        var aspNet = new UrlHelper(new ActionContext(new DefaultHttpContext(), new RouteData(), new ActionDescriptor())).IsLocalUrl(url);
+
+        Assert.Equal(aspNet, DirectoryLoginFilter.IsLocalUrl(url));
     }
 
     /// <summary>A directory sign-in with stand-ins, as in <see cref="LoginFilterTests"/>.</summary>
