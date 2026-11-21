@@ -69,7 +69,8 @@ More detail on a sign-in:
 3. Orchard's login-form event `LoggingInAsync` is raised for every subscriber (this is where, for
    example, Orchard's reCAPTCHA checks the form). If any subscriber reports an error or fails, the
    sign-in is refused **before any directory call**.
-4. Tor's throttle is checked. The name may be `name`, `DOMAIN\name` (NetBIOS or DNS domain name of
+4. A password longer than 256 characters is refused, and counted as a failure, before the throttle
+   and any directory call. Then Tor's throttle is checked. The name may be `name`, `DOMAIN\name` (NetBIOS or DNS domain name of
    the configured domain) or a user principal name. Anything else fails.
 5. Tor binds as the user and reads, with that bind: the bind's own identity (WhoAmI), the user's
    object (SID, `sAMAccountName`, UPN, display name, mail, account control flags, expiry) and its

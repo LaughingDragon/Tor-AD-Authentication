@@ -10,6 +10,7 @@ using OrchardCore.DisplayManagement.Notify;
 using OrchardCore.Users;
 using OrchardCore.Users.Events;
 using OrchardCore.Users.Models;
+using Tor.Account;
 using Tor.Directory;
 using Tor.Services;
 
@@ -168,6 +169,13 @@ public sealed class DirectoryLoginFilter : IAsyncActionFilter
         if (await LoggingInAsync(typed) is { } refused)
         {
             (refusal.Reason, refusal.Count) = (refused, true);
+            return null;
+        }
+
+        // no domain password is this long (the account forms have the same limit): refused before the throttle and the bind
+        if (password.Length > AccountActions.MaxPasswordLength)
+        {
+            (refusal.Reason, refusal.Count) = ($"password longer than {AccountActions.MaxPasswordLength} characters", true);
             return null;
         }
 

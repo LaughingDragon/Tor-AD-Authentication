@@ -12,6 +12,8 @@ Fixes from the line-by-line security review of 0.1.0-preview, and packaging.
   neutral group and role names.
 - **No caching of account responses:** every response from `/account`, the pictures included, is
   sent with `Cache-Control: private, no-store` (the pictures were `private, no-cache`).
+- **Login password limit:** a password longer than 256 characters (the limit the account forms
+  already had) is refused and counted as a failure before the throttle and the bind.
 
 ## 0.1.0-preview
 
