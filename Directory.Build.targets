@@ -1,0 +1,24 @@
+<!-- Copyright (c) 2026 Liam P. Ward. Licensed under the MIT License; see LICENSE in the repository root. SPDX-License-Identifier: MIT -->
+<Project>
+  <!-- No local paths in the packaged assembly: compiler paths are mapped, and the asset paths Orchard embeds for
+       development-time file serving point at a neutral folder (Orchard then serves the embedded copies). -->
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'Tor'">
+    <PathMap>$(MSBuildProjectDirectory)=/_/src/Tor</PathMap>
+  </PropertyGroup>
+
+  <Target Name="TorNeutralAssetPaths" AfterTargets="OrchardCoreEmbedModuleAssets" BeforeTargets="GenerateAssemblyInfo" Condition="'$(MSBuildProjectName)' == 'Tor'">
+    <ItemGroup>
+      <_TorAsset Include="@(AssemblyAttribute)" Condition="'%(Identity)' == 'OrchardCore.Modules.Manifest.ModuleAssetAttribute'" />
+      <AssemblyAttribute Remove="@(_TorAsset)" />
+      <AssemblyAttribute Include="OrchardCore.Modules.Manifest.ModuleAssetAttribute" Condition="'@(_TorAsset)' != ''">
+        <_Parameter1>$([System.String]::Copy('%(_TorAsset._Parameter1)').Replace('$(MSBuildProjectDirectory)', '/_/src/Tor'))</_Parameter1>
+      </AssemblyAttribute>
+    </ItemGroup>
+  </Target>
+
+  <!-- NuGet imports only build\<package id>.props; Orchard's own build\Tor.props is named after the assembly. This
+       one registers the module (assembly Tor) under the package id, so a site that references the package loads it. -->
+  <ItemGroup Condition="'$(MSBuildProjectName)' == 'Tor' And '$(PackageId)' != 'Tor'">
+    <None Include="$(MSBuildThisFileDirectory)build\Tor.Package.props" Pack="true" PackagePath="build\$(PackageId).props" Visible="false" />
+  </ItemGroup>
+</Project>
