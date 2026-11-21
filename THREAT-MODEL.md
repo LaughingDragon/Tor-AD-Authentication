@@ -1,6 +1,6 @@
 # Threat model
 
-This is the threat model for Tor 0.1.0-preview: the **Tor** sign-in feature and the **Tor Account** feature.
+This is the threat model for Tor 0.1.0-preview.1: the **Tor** sign-in feature and the **Tor Account** feature.
 It describes what Tor protects, where the trust boundaries are, which attackers it considers, how each threat
 is handled and what risk remains. The last section maps Tor's controls to OWASP ASVS 4.0.3 level 2. That table
 shows where the design is **aligned with** ASVS. It is not a certification or a claim of compliance, and the

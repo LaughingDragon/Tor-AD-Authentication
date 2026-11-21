@@ -6,7 +6,7 @@ using OrchardCore.Modules.Manifest;
     Name = "Tor",
     Author = "Liam P. Ward",
     Website = "https://github.com/LaughingDragon/Tor-AD-Authentication",
-    Version = "0.1.0-preview",
+    Version = "0.1.0-preview.1",
     Description = "Active Directory sign-in on the login page: LDAP bind as the user, group gate, managed roles.",
     Category = "Security",
     Dependencies = ["OrchardCore.Users", "OrchardCore.Roles"]

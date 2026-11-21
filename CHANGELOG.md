@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.0-preview.1 (not yet released)
+
+Fixes from the line-by-line security review of 0.1.0-preview, and packaging.
+
+- **Package:** published as `LaughingDragon.OrchardCore.ActiveDirectory`, with symbols, SourceLink
+  and no local build paths in the assembly or the symbols. The manifest version is now the package
+  version.
+- **Documentation:** the README describes the package, and that this version has one feature
+  (Tor Account) that holds both the sign-in and the account page. Configuration examples use
+  neutral group and role names.
+
 ## 0.1.0-preview
 
 First public preview. Changes from the earlier, unpublished versions of Tor:

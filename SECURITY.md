@@ -18,7 +18,7 @@ back-ported releases.
 
 | Component | Supported |
 |---|---|
-| `main` branch (0.1.0-preview) | Yes |
+| `main` branch (0.1.0-preview.1) | Yes |
 | Any older commit or copy | No |
 | Orchard Core 3.0.1 on .NET 10 | The only combination built and tested |
 | Other Orchard Core or .NET versions | Not tested |

@@ -1,6 +1,6 @@
 # Tor: Active Directory sign-in for Orchard Core
 
-**Status: preview (0.1.0-preview).** This release has been verified on one production site; an
+**Status: preview (0.1.0-preview.1).** This release has been verified on one production site; an
 earlier version of Tor has run on several sites. A line-by-line security review of this release is
 in progress. Report problems through GitHub's private vulnerability reporting (Security tab), not as
 a public issue.
@@ -115,7 +115,7 @@ Local break-glass accounts (`LocalAccounts`) go through Orchard's own login unch
 Orchard's checks. When Tor's throttle blocks one, Orchard's login does not run, and Tor raises
 `LoggingInFailedAsync` itself.
 
-While the Tor feature is enabled it also sets Orchard's sign-in cookie, for every sign-in, to
+While Tor is enabled it also sets Orchard's sign-in cookie, for every sign-in, to
 `HttpOnly`, `Secure` (HTTPS only), `SameSite=Lax`, with an 8-hour sliding expiry. While it is
 disabled, Tor does nothing and Orchard's sign-in behaves as it does without Tor.
 
@@ -137,7 +137,17 @@ Other versions of Orchard Core or .NET have not been tested.
 
 ## Installation
 
-Tor is distributed as source. It is not published as a NuGet package.
+Tor is packaged as `LaughingDragon.OrchardCore.ActiveDirectory`, a NuGet package with symbols and
+SourceLink. Until that package is published on nuget.org, install from source.
+
+**From the package (once published):**
+
+1. Add the package to your Orchard Core web project:
+   `dotnet add package LaughingDragon.OrchardCore.ActiveDirectory --prerelease`.
+2. Add the configuration below to the server's settings (not to the repository).
+3. Build and deploy the site, then enable the feature (see [Features](#features)).
+
+**From source:**
 
 1. Copy `src/Tor` into your Orchard Core web solution (or add this repository as a submodule) and
    add a project reference to `Tor.csproj` from your Orchard web project.
@@ -145,8 +155,15 @@ Tor is distributed as source. It is not published as a NuGet package.
    versions from [`Directory.Packages.props`](Directory.Packages.props) to `Tor.csproj`; if it does,
    add those `PackageVersion` entries to yours.
 3. Add the configuration below to the server's settings (not to the repository).
-4. Build and deploy the site, then in the Orchard admin go to **Configuration > Features** and
-   enable **Tor**, then (optionally) **Tor Account**.
+4. Build and deploy the site, then enable the feature (see [Features](#features)).
+
+### Features
+
+In this version the module declares one feature, **Tor Account** (`Tor.Account`), and Orchard puts
+both the directory sign-in and the account page under it. To turn on directory sign-in, enable **Tor
+Account** under **Configuration > Features**; disabling it turns both off. A separate **Tor**
+feature for the sign-in alone, with **Tor Account** depending on it, is planned for the next
+version.
 
 To build and test this repository on its own:
 
@@ -187,9 +204,9 @@ Tor reads the section `OrchardCore:Tor` of the site's configuration (for example
       "UseLdaps": true,
       "TimeoutSeconds": 10,
       "GroupRoles": {
-        "Intranet-Users": "Intranet Users",
-        "Intranet-Guests": "Guests",
-        "Intranet-Admins": "Administrator"
+        "Web-Members": "Members",
+        "Web-Guests": "Guests",
+        "Web-Admins": "Administrator"
       },
       "AllowAdministratorMapping": false,
       "LocalAccounts": [ "breakglass-admin" ],
@@ -219,9 +236,9 @@ Tor reads the section `OrchardCore:Tor` of the site's configuration (for example
 | `OfficeContentType` | (empty) | Tor Account, optional: a content type whose published titles are added to the Location choices. |
 | `OfficePathPrefix` | (empty) | Tor Account, optional: with `OfficeContentType`, only items whose address starts with this path. |
 
-In this example the `Intranet-Admins` entry is ignored, because `AllowAdministratorMapping` is
-`false`: members of `Intranet-Admins` who are in no other mapped group cannot sign in, and members
-who are also in `Intranet-Users` sign in with `Intranet Users` only. Set the flag to `true` only if
+In this example the `Web-Admins` entry is ignored, because `AllowAdministratorMapping` is
+`false`: members of `Web-Admins` who are in no other mapped group cannot sign in, and members
+who are also in `Web-Members` sign in with `Members` only. Set the flag to `true` only if
 a directory group really should make its members Orchard administrators.
 
 Turning `AllowAdministratorMapping` off later does not take `Administrator` away from users who
