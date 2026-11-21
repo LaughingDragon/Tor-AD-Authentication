@@ -40,7 +40,10 @@ Tor is MIT licensed (see [`LICENSE`](LICENSE)).
   `FailureWindowMinutes`). While a name or address is blocked, Tor does not contact the domain at
   all, so attempts through the site stop adding to the domain's own lockout count. A domain that
   cannot be reached is not counted against the user. A successful sign-in clears the user name's
-  count, not the client address's.
+  count and gives the client address its attempt back. `name`, `DOMAIN\name` and `name@domain`
+  (with the configured domain) count as one user name. Each attempt is checked and counted in one
+  step, so parallel attempts cannot pass the limit. Keys are hashed, and the table holds at most
+  50,000 windows: when it is full, expired windows are dropped first, then the oldest.
 - **A local break-glass administrator.** Orchard user names listed in `LocalAccounts` keep
   Orchard's normal password sign-in, so the site can be administered when the domain cannot be
   reached. They are throttled and logged like domain sign-ins.

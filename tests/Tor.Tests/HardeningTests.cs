@@ -224,6 +224,103 @@ public class HardeningTests
     public void A_picture_of_16_million_pixels_or_fewer_gets_past_the_size_check(int width, int height) =>
         Assert.NotEqual(PictureOutcome.TooManyPixels, PictureProcessor.Process(PictureTests.PngWithHeaderSize(width, height)).Outcome);
 
+    // ---- item 9: the throttle counts one person once, is bounded, and checks and counts in one step
+    [Fact]
+    public async Task The_plain_name_and_the_user_principal_name_share_one_count()
+    {
+        var r = new Rig();
+        r.Directory.Result = new DirectoryResult(DirectoryOutcome.BadCredentials);
+
+        foreach (var name in new[] { "alice", "alice@corp.example.com", "CORP\alice", "ALICE@CORP.EXAMPLE.COM" })
+        {
+            for (var i = 0; i < 3; i++)
+            {
+                await r.SignInAsync(name, client: $"192.0.2.{r.Journal.Entries.Count}");
+            }
+        }
+
+        Assert.Equal(r.Options.MaxFailuresPerUser, r.Journal.Count("bind"));
+    }
+
+    [Fact]
+    public void A_user_principal_name_of_another_suffix_keeps_its_own_count()
+    {
+        Assert.Equal("alice", AccountName.Parse("alice@corp.example.com", "CORP", "corp.example.com")!.ThrottleKey);
+        Assert.Equal("alice@partner.example", AccountName.Parse("alice@partner.example", "CORP", "corp.example.com")!.ThrottleKey);
+    }
+
+    private sealed class SlowDirectory : IDirectoryAuthenticator
+    {
+        private int _calls;
+
+        public int Calls => _calls;
+
+        public DirectoryResult Authenticate(AccountName account, string password)
+        {
+            Interlocked.Increment(ref _calls);
+            Thread.Sleep(50);
+            return new DirectoryResult(DirectoryOutcome.BadCredentials);
+        }
+    }
+
+    [Fact]
+    public async Task Parallel_attempts_cannot_pass_the_limit()
+    {
+        var slow = new SlowDirectory();
+        var r = new Rig { Authenticator = slow };
+
+        await Task.WhenAll(Enumerable.Range(0, 40).Select(i => Task.Run(() => r.SignInAsync(client: "192.0.2." + i))));
+
+        Assert.Equal(r.Options.MaxFailuresPerUser, slow.Calls);
+    }
+
+    private static System.Collections.ICollection Table(LoginThrottle throttle) =>
+        (System.Collections.ICollection)typeof(LoginThrottle).GetField("_failures", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(throttle)!;
+
+    // the earlier throttle scanned the whole table on every failure once it held 10,000 entries: the timeout catches that
+    [Fact(Timeout = 60_000)]
+    public async Task The_table_has_a_hard_cap_while_windows_are_live_and_stays_fast()
+    {
+        var throttle = new LoginThrottle(Microsoft.Extensions.Options.Options.Create(new TorOptions()), TimeProvider.System);
+
+        await Task.Run(() =>
+        {
+            for (var i = 0; i < 60_000; i++)
+            {
+                throttle.RecordFailure("user" + i, "client" + i);
+            }
+        });
+
+        Assert.InRange(Table(throttle).Count, 1, 50_000);
+    }
+
+    [Fact]
+    public void Keys_are_bounded_whatever_was_typed()
+    {
+        var throttle = new LoginThrottle(Microsoft.Extensions.Options.Options.Create(new TorOptions()), TimeProvider.System);
+
+        throttle.RecordFailure(new string('x', 100_000), new string('y', 10_000));
+
+        var keys = ((System.Collections.IDictionary)Table(throttle)).Keys.Cast<string>().ToList();
+        Assert.Equal(2, keys.Count);
+        Assert.All(keys, k => Assert.InRange(k.Length, 1, 80));
+        Assert.True(throttle.IsBlocked(new string('x', 100_000), "z") == false);
+    }
+
+    [Fact]
+    public async Task A_good_sign_in_gives_the_client_address_its_attempt_back()
+    {
+        var r = new Rig();
+        for (var i = 0; i < r.Options.MaxFailuresPerClient - 1; i++)
+        {
+            r.Throttle.RecordFailure("user" + i, "192.0.2.10");
+        }
+
+        await r.SignInAsync();
+
+        Assert.False(r.Throttle.IsBlocked("bob", "192.0.2.10"));
+    }
+
     /// <summary>A directory sign-in with stand-ins, as in <see cref="LoginFilterTests"/>.</summary>
     private sealed class Rig
     {

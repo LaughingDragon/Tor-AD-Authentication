@@ -89,7 +89,7 @@ public sealed class DirectoryLoginFilter : IAsyncActionFilter
         if (IsLocalAccount(typed))
         {
             var localKey = "local:" + typed.Trim().ToLowerInvariant();
-            if (_throttle.IsBlocked(localKey, client))
+            if (_throttle.TryBegin(localKey, client) is not { } attempt)
             {
                 // Orchard's action does not run, so its failure event is raised here
                 context.Result = await FailAsync(typed, client, "local", "rate limited", user: null, returnUrl);
@@ -101,12 +101,12 @@ public sealed class DirectoryLoginFilter : IAsyncActionFilter
             var executed = await next();
             if (executed.Exception is null && executed.Result is RedirectResult or LocalRedirectResult)
             {
-                _throttle.RecordSuccess(localKey);
+                _throttle.Succeeded(attempt);
                 _audit.Success(typed, client, "local");
             }
             else
             {
-                _throttle.RecordFailure(localKey, client);
+                // the attempt was counted when it began
                 _audit.Failure(typed, client, "local", "local login refused");
             }
 
@@ -128,7 +128,7 @@ public sealed class DirectoryLoginFilter : IAsyncActionFilter
             if (await DirectoryAsync(account, typed, password, client, refusal) is { } signedIn)
             {
                 // signed in: only logging and redirect from here
-                _throttle.RecordSuccess(userKey);
+                _throttle.Succeeded(refusal.Attempt!);
                 _audit.Success(typed, client, "directory " + signedIn.Transport);
                 return new LocalRedirectResult(!string.IsNullOrEmpty(returnUrl) && IsLocalUrl(returnUrl) ? returnUrl : "~/");
             }
@@ -141,7 +141,15 @@ public sealed class DirectoryLoginFilter : IAsyncActionFilter
             refusal.Count = true;
         }
 
-        if (refusal.Count)
+        // an attempt that got past the throttle was counted when it began; one that did not is counted here
+        if (refusal.Attempt is { } attempt)
+        {
+            if (!refusal.Count)
+            {
+                _throttle.Release(attempt);
+            }
+        }
+        else if (refusal.Count)
         {
             _throttle.RecordFailure(userKey, client);
         }
@@ -158,6 +166,9 @@ public sealed class DirectoryLoginFilter : IAsyncActionFilter
 
         /// <summary>Whether it counts against the user name and client in the throttle.</summary>
         public bool Count { get; set; }
+
+        /// <summary>The throttle attempt, once the sign-in got past the throttle.</summary>
+        public LoginThrottle.Attempt? Attempt { get; set; }
     }
 
     // the result on success; null with the refusal filled in on any failure
@@ -186,8 +197,9 @@ public sealed class DirectoryLoginFilter : IAsyncActionFilter
             return null;
         }
 
-        // (b) Tor's throttle, the bind as the user and the group gate
-        if (_throttle.IsBlocked(userKey, client))
+        // (b) Tor's throttle (checked and counted in one step), the bind as the user and the group gate
+        refusal.Attempt = _throttle.TryBegin(userKey, client);
+        if (refusal.Attempt is null)
         {
             refusal.Reason = "rate limited";
             return null;

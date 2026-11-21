@@ -26,8 +26,17 @@ public sealed record AccountName(AccountNameKind Kind, string Name, string? UpnS
     /// <summary>The login name to bind with: UPN as typed, otherwise just the name (domain is set separately).</summary>
     public string BindName => Kind == AccountNameKind.UserPrincipalName ? $"{Name}@{UpnSuffix}" : Name;
 
-    /// <summary>Key for rate limiting: the same person typed three ways is still one key when the suffix is the domain.</summary>
-    public string ThrottleKey => Kind == AccountNameKind.UserPrincipalName ? BindName.ToLowerInvariant() : Name.ToLowerInvariant();
+    private readonly string? _throttleKey;
+
+    /// <summary>
+    /// Key for rate limiting: the same person typed three ways (name, DOMAIN\name, name@domain) is one key when the
+    /// UPN suffix is the configured domain. A UPN with another suffix keeps its own key.
+    /// </summary>
+    public string ThrottleKey
+    {
+        get => _throttleKey ?? (Kind == AccountNameKind.UserPrincipalName ? BindName.ToLowerInvariant() : Name.ToLowerInvariant());
+        private init => _throttleKey = value;
+    }
 
     /// <summary>
     /// Parses what the user typed. A DOMAIN\ prefix must name this domain (NetBIOS or DNS name).
@@ -77,7 +86,9 @@ public sealed record AccountName(AccountNameKind Kind, string Name, string? UpnS
                 return null;
             }
 
-            return new AccountName(AccountNameKind.UserPrincipalName, name, suffix);
+            return suffix.Equals(dnsDomain, StringComparison.OrdinalIgnoreCase)
+                ? new AccountName(AccountNameKind.UserPrincipalName, name, suffix) { ThrottleKey = name.ToLowerInvariant() }
+                : new AccountName(AccountNameKind.UserPrincipalName, name, suffix);
         }
 
         return IsSamAccountName(text) ? new AccountName(AccountNameKind.Plain, text, null) : null;

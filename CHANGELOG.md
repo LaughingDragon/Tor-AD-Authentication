@@ -25,6 +25,10 @@ Fixes from the line-by-line security review of 0.1.0-preview, and packaging.
   off with a zero or negative window. A warning is logged at start-up when `UseLdaps` is `false`.
 - **Picture size:** uploads are limited to 16 million pixels (was 40 million), which caps the
   memory one decode can take at about 64 MB. The 2 MB and 12,000-pixel limits are unchanged.
+- **Throttle:** a user principal name with the configured domain now shares the count of the plain
+  and `DOMAIN\` forms of the same account. An attempt is checked and counted in one step, so
+  parallel attempts no longer pass the limit. Keys are hashed (bounded whatever was typed), the
+  table has a hard cap of 50,000 windows, and a full table no longer costs a scan on every failure.
 
 ## 0.1.0-preview
 
