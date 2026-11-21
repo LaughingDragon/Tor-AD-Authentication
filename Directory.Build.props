@@ -5,8 +5,10 @@
     <Authors>Liam P. Ward</Authors>
     <Company>Liam P. Ward</Company>
     <Copyright>Copyright (c) 2026 Liam P. Ward. MIT License.</Copyright>
-    <Version>0.1.0-preview</Version>
+    <Version>0.1.0-preview.1</Version>
     <RepositoryUrl>https://github.com/LaughingDragon/Tor-AD-Authentication</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <Deterministic>true</Deterministic>
 
     <!-- NuGet: pinned central versions, committed lock files, audit on -->
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
@@ -17,4 +19,25 @@
     <NuGetAuditMode>all</NuGetAuditMode>
     <NuGetAuditLevel>low</NuGetAuditLevel>
   </PropertyGroup>
+
+  <!-- NuGet package of the module (src/Tor only); build it with -p:ContinuousIntegrationBuild=true from a clean checkout -->
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'Tor'">
+    <IsPackable>true</IsPackable>
+    <PackageId>LaughingDragon.OrchardCore.ActiveDirectory</PackageId>
+    <Title>Tor: Active Directory sign-in for Orchard Core</Title>
+    <PackageDescription>Active Directory sign-in for Orchard Core over LDAPS: binds as the user (no service account), group gating with an explicit group-to-role map, throttling and audit logging. Includes Tor Account, a self-service account page. Preview.</PackageDescription>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageProjectUrl>https://github.com/LaughingDragon/Tor-AD-Authentication</PackageProjectUrl>
+    <PackageTags>orchardcore;orchard-core;orchardcore-module;active-directory;ldap;ldaps;authentication;sign-in</PackageTags>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <EnablePackageValidation>true</EnablePackageValidation>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(MSBuildProjectName)' == 'Tor'">
+    <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="\" Visible="false" />
+  </ItemGroup>
 </Project>
