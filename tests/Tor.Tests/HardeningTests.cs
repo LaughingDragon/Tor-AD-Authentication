@@ -122,6 +122,24 @@ public class HardeningTests
         Assert.Equal(aspNet, DirectoryLoginFilter.IsLocalUrl(url));
     }
 
+    // ---- item 12: no Unicode line separators or invisible format characters in logged names
+    [Theory]
+    [InlineData("a\u2028b", "ab")]
+    [InlineData("a\u2029b", "ab")]
+    [InlineData("admin\u202Egnp.exe", "admingnp.exe")]
+    [InlineData("al\u200Bice", "alice")]
+    [InlineData("\uFEFFalice", "alice")]
+    [InlineData("a\u2066b\u2069", "ab")]
+    public void Separators_and_format_characters_are_removed_from_logged_names(string typed, string logged) =>
+        Assert.Equal(logged, SignInAudit.Clean(typed));
+
+    [Theory]
+    [InlineData("José Müller")]
+    [InlineData("Łukasz")]
+    [InlineData("名前")]
+    [InlineData("alice \U0001F600")]
+    public void Ordinary_letters_and_symbols_are_kept(string typed) => Assert.Equal(typed, SignInAudit.Clean(typed));
+
     /// <summary>A directory sign-in with stand-ins, as in <see cref="LoginFilterTests"/>.</summary>
     private sealed class Rig
     {

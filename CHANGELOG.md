@@ -17,6 +17,8 @@ Fixes from the line-by-line security review of 0.1.0-preview, and packaging.
 - **Return address:** Tor now uses ASP.NET Core's own local-URL rule, so `~//host`, `~/\host` and
   addresses with control characters send the user to the site root instead of causing an error
   after a successful sign-in.
+- **Log text:** typed names in `Tor.Audit` and in Orchard's failure event also lose Unicode line and
+  paragraph separators and format characters (for example U+2028, U+202E and zero-width spaces).
 
 ## 0.1.0-preview
 

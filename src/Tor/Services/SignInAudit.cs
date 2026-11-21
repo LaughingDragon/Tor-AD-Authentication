@@ -1,5 +1,6 @@
 // Copyright (c) 2026 Liam P. Ward. Licensed under the MIT License; see LICENSE in the repository root.
 // SPDX-License-Identifier: MIT
+using System.Globalization;
 using Microsoft.Extensions.Logging;
 
 namespace Tor.Services;
@@ -38,10 +39,14 @@ public sealed class SignInAudit
         }
     }
 
-    // what was typed can be anything: no control characters (no forged log lines), bounded length
+    // what was typed can be anything: no control characters (no forged log lines), no line or paragraph separators
+    // and no invisible format characters (bidirectional overrides, zero-width), bounded length
     internal static string Clean(string? value)
     {
-        var text = new string((value ?? "").Where(ch => !char.IsControl(ch)).ToArray()).Trim();
+        var text = new string((value ?? "").Where(IsKept).ToArray()).Trim();
         return text.Length > MaxNameLength ? text[..MaxNameLength] + "…" : text;
     }
+
+    private static bool IsKept(char ch) => char.GetUnicodeCategory(ch) is not
+        (UnicodeCategory.Control or UnicodeCategory.Format or UnicodeCategory.LineSeparator or UnicodeCategory.ParagraphSeparator);
 }

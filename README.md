@@ -46,8 +46,8 @@ Tor is MIT licensed (see [`LICENSE`](LICENSE)).
   reached. They are throttled and logged like domain sign-ins.
 - **Audit logging.**
   - Every sign-in attempt, successful or not, writes one line to the logger `Tor.Audit`: the
-    outcome, the reason for a failure, the user name as typed (control characters removed, at most
-    128 characters), the client address and whether it was a local or a directory sign-in. Never a
+    outcome, the reason for a failure, the user name as typed (control characters, line and paragraph separators and invisible
+    format characters such as bidirectional overrides removed, at most 128 characters), the client address and whether it was a local or a directory sign-in. Never a
     password.
   - Directory sign-ins raise the same Orchard login events as Orchard's own login (see
     [Orchard's login checks](#orchards-login-checks)). With Orchard's **Users Audit Trail** feature
