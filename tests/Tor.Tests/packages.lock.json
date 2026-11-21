@@ -1241,7 +1241,7 @@
         "resolved": "2.6.0",
         "contentHash": "XE8a+11nZg0LRaf+RGABEWaHIf8yGd5w8v/Ra1iWxMBmAVzwuKbW7G21mS0U7w7sh1lYcgckInWGgnz4qyET8A=="
       },
-      "tor": {
+      "LaughingDragon.OrchardCore.ActiveDirectory": {
         "type": "Project",
         "dependencies": {
           "OrchardCore.AuditTrail.Abstractions": "[3.0.1, )",
