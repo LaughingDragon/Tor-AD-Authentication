@@ -50,6 +50,11 @@ public static class TorOptionsCheck
             problems.Add("Tor:FailureWindowMinutes must be at least 1");
         }
 
+        if (options.MaxSessionHours is < 1 or > SessionLifetime.MaxHours)
+        {
+            problems.Add($"Tor:MaxSessionHours must be 1 to {SessionLifetime.MaxHours}");
+        }
+
         return problems;
     }
 }

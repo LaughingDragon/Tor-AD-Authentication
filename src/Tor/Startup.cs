@@ -40,14 +40,17 @@ public sealed class Startup : StartupBase
 
         services.Configure<MvcOptions>(options => options.Filters.AddService<DirectoryLoginFilter>());
 
-        // the sign-in cookie, for every login while Tor is on: HTTPS only, no script access, 8 hours sliding
-        services.PostConfigure<CookieAuthenticationOptions>(IdentityConstants.ApplicationScheme, options =>
-        {
-            options.Cookie.HttpOnly = true;
-            options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-            options.Cookie.SameSite = SameSiteMode.Lax;
-            options.ExpireTimeSpan = TimeSpan.FromHours(8);
-            options.SlidingExpiration = true;
-        });
+        // the sign-in cookie, for every login while Tor is on: HTTPS only, no script access, 8 hours sliding,
+        // and an absolute lifetime (12 hours by default) from the sign-in
+        services.AddOptions<CookieAuthenticationOptions>(IdentityConstants.ApplicationScheme)
+            .PostConfigure<IOptions<TorOptions>, TimeProvider>((options, tor, time) =>
+            {
+                options.Cookie.HttpOnly = true;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                options.Cookie.SameSite = SameSiteMode.Lax;
+                options.ExpireTimeSpan = TimeSpan.FromHours(8);
+                options.SlidingExpiration = true;
+                SessionLifetime.Apply(options, tor.Value, time);
+            });
     }
 }

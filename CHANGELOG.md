@@ -32,6 +32,10 @@ Fixes from the line-by-line security review of 0.1.0-preview, and packaging.
 - **Break-glass answer:** a refused break-glass sign-in now gets the same answer as a refused
   directory sign-in ("Invalid login attempt." and a redirect to the login page) instead of Orchard's
   login page with its own message, so a break-glass name can no longer be told apart.
+- **Absolute session lifetime:** every sign-in now ends 12 hours after it was made (setting
+  `MaxSessionHours`, 1 to 720), however often it is used; the 8-hour sliding expiry still applies
+  within it. Cookies issued before the upgrade count from when they were last issued. Users are
+  signed out when their session reaches the limit.
 
 ## 0.1.0-preview
 

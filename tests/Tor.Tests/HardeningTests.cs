@@ -2,15 +2,23 @@
 // SPDX-License-Identifier: MIT
 // The fixes from the line-by-line security review of 0.1.0-preview, one section per review item.
 using System.Reflection;
+using System.Security.Claims;
 using System.Reflection.Emit;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using OrchardCore.DisplayManagement.Notify;
+using OrchardCore.Environment.Shell.Configuration;
 using OrchardCore.Modules.Manifest;
 using Tor.Account;
 using Tor.Controllers;
@@ -147,7 +155,7 @@ public class HardeningTests
     public static TheoryData<string> BadSettings() =>
     [
         "FailureWindowMinutes=0", "FailureWindowMinutes=-5", "MaxFailuresPerUser=0", "MaxFailuresPerClient=-1",
-        "TimeoutSeconds=0", "TimeoutSeconds=61", "Servers=", "Servers= ", "NetBiosName=", "Domain=",
+        "TimeoutSeconds=0", "TimeoutSeconds=61", "Servers=", "Servers= ", "NetBiosName=", "Domain=", "MaxSessionHours=0", "MaxSessionHours=721",
     ];
 
     private static TorOptions With(string setting)
@@ -163,6 +171,7 @@ public class HardeningTests
             case "Servers": o.Servers = value.Length == 0 ? [] : [value]; break;
             case "NetBiosName": o.NetBiosName = value; break;
             case "Domain": o.Domain = value; break;
+            case "MaxSessionHours": o.MaxSessionHours = int.Parse(value, System.Globalization.CultureInfo.InvariantCulture); break;
         }
 
         return o;
@@ -390,6 +399,136 @@ public class HardeningTests
         Assert.Same(success, (await PostLoginAsync(r, "breakglass", success)).After!.Result);
         Assert.Same(twoFactor, (await PostLoginAsync(r, "breakglass", twoFactor)).After!.Result);
         Assert.Empty(r.Notifier.Messages);
+    }
+
+    // ---- item 7: an absolute session lifetime, 12 hours by default, whatever the sliding expiry does
+    private sealed class ManualTime : TimeProvider
+    {
+        public DateTimeOffset Now { get; set; } = new(2026, 11, 21, 8, 0, 0, TimeSpan.Zero);
+
+        public override DateTimeOffset GetUtcNow() => Now;
+    }
+
+    private sealed class SignOutRecorder : IAuthenticationService
+    {
+        public List<string?> SignedOut { get; } = [];
+
+        public Task<AuthenticateResult> AuthenticateAsync(HttpContext context, string? scheme) => Task.FromResult(AuthenticateResult.NoResult());
+
+        public Task ChallengeAsync(HttpContext context, string? scheme, AuthenticationProperties? properties) => Task.CompletedTask;
+
+        public Task ForbidAsync(HttpContext context, string? scheme, AuthenticationProperties? properties) => Task.CompletedTask;
+
+        public Task SignInAsync(HttpContext context, string? scheme, ClaimsPrincipal principal, AuthenticationProperties? properties) => Task.CompletedTask;
+
+        public Task SignOutAsync(HttpContext context, string? scheme, AuthenticationProperties? properties)
+        {
+            SignedOut.Add(scheme);
+            return Task.CompletedTask;
+        }
+    }
+
+    /// <summary>Orchard's sign-in cookie as Tor's Startup configures it, with an earlier validator (Identity's security stamp check) in place.</summary>
+    private sealed class SessionRig
+    {
+        private readonly AuthenticationScheme _scheme = new(IdentityConstants.ApplicationScheme, null, typeof(CookieAuthenticationHandler));
+
+        public SessionRig(Dictionary<string, string?>? settings = null)
+        {
+            var services = new ServiceCollection();
+            services.AddSingleton<TimeProvider>(Time);
+            services.AddLogging();
+            services.Configure<CookieAuthenticationOptions>(IdentityConstants.ApplicationScheme, o => o.Events.OnValidatePrincipal = _ =>
+            {
+                InnerValidations++;
+                return Task.CompletedTask;
+            });
+            new Startup(new ShellConfiguration(new ConfigurationBuilder().AddInMemoryCollection(settings ?? []).Build())).ConfigureServices(services);
+            Options = services.BuildServiceProvider().GetRequiredService<IOptionsMonitor<CookieAuthenticationOptions>>().Get(IdentityConstants.ApplicationScheme);
+        }
+
+        public ManualTime Time { get; } = new();
+        public SignOutRecorder Auth { get; } = new();
+        public CookieAuthenticationOptions Options { get; }
+        public int InnerValidations { get; private set; }
+
+        private DefaultHttpContext Http() => new() { RequestServices = new ServiceCollection().AddSingleton<IAuthenticationService>(Auth).BuildServiceProvider() };
+
+        private static ClaimsPrincipal Principal() => new(new ClaimsIdentity([new Claim(ClaimTypes.Name, "alice")], "test"));
+
+        /// <summary>A new sign-in now: the cookie's properties as the handler would write them.</summary>
+        public async Task<AuthenticationProperties> SignInAsync(AuthenticationProperties? properties = null)
+        {
+            properties ??= new AuthenticationProperties();
+            properties.IssuedUtc = Time.Now;
+            await Options.Events.SigningIn(new CookieSigningInContext(Http(), _scheme, Options, Principal(), properties, new CookieOptions()));
+            return properties;
+        }
+
+        /// <summary>A later request with that cookie; true when the session is still accepted.</summary>
+        public async Task<bool> RequestAsync(AuthenticationProperties properties)
+        {
+            var context = new CookieValidatePrincipalContext(Http(), _scheme, Options, new AuthenticationTicket(Principal(), properties, _scheme.Name));
+            await Options.Events.ValidatePrincipal(context);
+            return context.Principal is not null;
+        }
+    }
+
+    [Fact]
+    public async Task A_session_ends_12_hours_after_sign_in_even_while_it_is_used()
+    {
+        var r = new SessionRig();
+        var cookie = await r.SignInAsync();
+
+        // used every 30 minutes: the sliding expiry renews the cookie and moves IssuedUtc each time
+        for (var i = 1; i < 24; i++)
+        {
+            r.Time.Now += TimeSpan.FromMinutes(30);
+            Assert.True(await r.RequestAsync(cookie));
+            cookie.IssuedUtc = r.Time.Now;
+        }
+
+        r.Time.Now += TimeSpan.FromMinutes(30);
+
+        Assert.False(await r.RequestAsync(cookie));
+        Assert.Equal([IdentityConstants.ApplicationScheme], r.Auth.SignedOut);
+    }
+
+    [Fact]
+    public async Task The_lifetime_is_configurable()
+    {
+        var r = new SessionRig(new() { ["Tor:MaxSessionHours"] = "2" });
+        var cookie = await r.SignInAsync();
+
+        r.Time.Now += TimeSpan.FromHours(1.9);
+        Assert.True(await r.RequestAsync(cookie));
+        r.Time.Now += TimeSpan.FromHours(0.2);
+        Assert.False(await r.RequestAsync(cookie));
+    }
+
+    [Fact]
+    public async Task A_refreshed_sign_in_keeps_the_session_start()
+    {
+        // Orchard's RefreshSignInAsync signs in again with the same properties: that is not a new session
+        var r = new SessionRig();
+        var cookie = await r.SignInAsync();
+        r.Time.Now += TimeSpan.FromHours(11);
+        await r.SignInAsync(cookie);
+        r.Time.Now += TimeSpan.FromHours(2);
+
+        Assert.False(await r.RequestAsync(cookie));
+    }
+
+    [Fact]
+    public async Task A_cookie_from_before_the_upgrade_counts_from_when_it_was_issued_and_the_earlier_validator_still_runs()
+    {
+        var r = new SessionRig();
+        var old = new AuthenticationProperties { IssuedUtc = r.Time.Now - TimeSpan.FromHours(13) };
+        var recent = new AuthenticationProperties { IssuedUtc = r.Time.Now - TimeSpan.FromHours(1) };
+
+        Assert.False(await r.RequestAsync(old));
+        Assert.True(await r.RequestAsync(recent));
+        Assert.Equal(1, r.InnerValidations);
     }
 
     /// <summary>A directory sign-in with stand-ins, as in <see cref="LoginFilterTests"/>.</summary>

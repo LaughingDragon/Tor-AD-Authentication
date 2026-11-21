@@ -39,6 +39,12 @@ public sealed class TorOptions
     public int FailureWindowMinutes { get; set; } = 15;
 
     /// <summary>
+    /// Absolute session lifetime: every sign-in, directory or local, ends this many hours after it was made, however
+    /// often it is used (the 8-hour sliding expiry still applies within it). 1 to 720.
+    /// </summary>
+    public int MaxSessionHours { get; set; } = 12;
+
+    /// <summary>
     /// Fixed Location (physicalDeliveryOfficeName) choices on the account page. Optional: with no choices here and
     /// no <see cref="OfficeContentType"/>, the page offers no Location field and never writes the attribute.
     /// </summary>

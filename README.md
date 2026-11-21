@@ -124,8 +124,10 @@ be told apart from other names. Orchard has already raised its failure event. A 
 Orchard's two-factor step is kept.
 
 While Tor is enabled it also sets Orchard's sign-in cookie, for every sign-in, to
-`HttpOnly`, `Secure` (HTTPS only), `SameSite=Lax`, with an 8-hour sliding expiry. While it is
-disabled, Tor does nothing and Orchard's sign-in behaves as it does without Tor.
+`HttpOnly`, `Secure` (HTTPS only), `SameSite=Lax`, with an 8-hour sliding expiry and an absolute
+lifetime: a session ends `MaxSessionHours` (12 by default) after the sign-in that started it, however
+often it is used, and the user signs in again. This applies to directory and local sign-ins alike.
+While it is disabled, Tor does nothing and Orchard's sign-in behaves as it does without Tor.
 
 ## Requirements
 
@@ -221,6 +223,7 @@ Tor reads the section `OrchardCore:Tor` of the site's configuration (for example
       "MaxFailuresPerUser": 5,
       "MaxFailuresPerClient": 20,
       "FailureWindowMinutes": 15,
+      "MaxSessionHours": 12,
       "OfficeChoices": [ "Head Office", "North Wing" ]
     }
   }
@@ -240,6 +243,7 @@ Tor reads the section `OrchardCore:Tor` of the site's configuration (for example
 | `MaxFailuresPerUser` | `5` | Failed sign-ins allowed per user name in the window; at least 1. |
 | `MaxFailuresPerClient` | `20` | Failed sign-ins allowed per client address in the window; at least 1. |
 | `FailureWindowMinutes` | `15` | Length of the throttling window, at least 1 minute. |
+| `MaxSessionHours` | `12` | Absolute session lifetime in hours, 1 to 720: every sign-in ends this long after it was made, however often it is used. |
 | `OfficeChoices` | (empty) | Tor Account: fixed choices for the Location field. |
 | `OfficeContentType` | (empty) | Tor Account, optional: a content type whose published titles are added to the Location choices. |
 | `OfficePathPrefix` | (empty) | Tor Account, optional: with `OfficeContentType`, only items whose address starts with this path. |
