@@ -24,6 +24,7 @@ namespace Tor.Controllers;
 /// </summary>
 [Authorize]
 [Route("account")]
+[NoStore]
 public sealed class AccountController : Controller
 {
     private readonly IAuthorizationService _authorizationService;
@@ -94,7 +95,6 @@ public sealed class AccountController : Controller
             return NotFound();
         }
 
-        Response.Headers.CacheControl = "private, no-cache";
         Response.Headers.XContentTypeOptions = "nosniff";
         return File(bytes, contentType);
     }
@@ -111,7 +111,6 @@ public sealed class AccountController : Controller
             return NotFound();
         }
 
-        Response.Headers.CacheControl = "private, no-cache";
         Response.Headers.XContentTypeOptions = "nosniff";
         if (await _sitePictures.ReadAsync(current.Page.User) is { } site)
         {

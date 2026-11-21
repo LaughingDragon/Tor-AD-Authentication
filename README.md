@@ -300,8 +300,9 @@ of these names if they exist: `Administrator` (all), `Intranet Users` (`ManageOw
 **Security > Roles**.
 
 **Other addresses.** `/account/picture` returns the user's own domain picture and `/account/avatar`
-the site picture or, failing that, the domain picture; both are sent with `Cache-Control: private,
-no-cache`.
+the site picture or, failing that, the domain picture. Every response from `/account`, these two
+included, is sent with `Cache-Control: private, no-store`, and the pictures also with
+`X-Content-Type-Options: nosniff`.
 
 **Theming.** The page is built from the shapes `AccountPage`, `AccountProfile`, `AccountPassword`,
 `AccountPicture`, `AccountContact` and `AccountSitePicture`. The module has plain Razor templates for

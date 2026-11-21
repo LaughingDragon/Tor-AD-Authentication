@@ -10,6 +10,8 @@ Fixes from the line-by-line security review of 0.1.0-preview, and packaging.
 - **Documentation:** the README describes the package, and that this version has one feature
   (Tor Account) that holds both the sign-in and the account page. Configuration examples use
   neutral group and role names.
+- **No caching of account responses:** every response from `/account`, the pictures included, is
+  sent with `Cache-Control: private, no-store` (the pictures were `private, no-cache`).
 
 ## 0.1.0-preview
 
