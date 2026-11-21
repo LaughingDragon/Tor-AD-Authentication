@@ -2,7 +2,8 @@
 
 ## 0.1.0-preview.1 (not yet released)
 
-Fixes from the line-by-line security review of 0.1.0-preview, and packaging.
+Fixes from the line-by-line security review of 0.1.0-preview, which has been done, and packaging.
+The risks that remain are listed in `THREAT-MODEL.md` (Residual risks).
 
 - **Package:** published as `LaughingDragon.OrchardCore.ActiveDirectory`, with symbols, SourceLink
   and no local build paths in the assembly or the symbols. The manifest version is now the package
@@ -36,6 +37,8 @@ Fixes from the line-by-line security review of 0.1.0-preview, and packaging.
   `MaxSessionHours`, 1 to 720), however often it is used; the 8-hour sliding expiry still applies
   within it. Cookies issued before the upgrade count from when they were last issued. Users are
   signed out when their session reaches the limit.
+- **Status text and threat model:** the README, the threat model and its ASVS table describe this
+  release; the residual risks are listed in `THREAT-MODEL.md`.
 
 ## 0.1.0-preview
 

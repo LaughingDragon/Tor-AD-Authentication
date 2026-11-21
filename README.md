@@ -1,9 +1,10 @@
 # Tor: Active Directory sign-in for Orchard Core
 
-**Status: preview (0.1.0-preview.1).** This release has been verified on one production site; an
-earlier version of Tor has run on several sites. A line-by-line security review of this release is
-in progress. Report problems through GitHub's private vulnerability reporting (Security tab), not as
-a public issue.
+**Status: preview (0.1.0-preview.1).** A line-by-line security review of 0.1.0-preview has been done.
+This release contains its fixes; the risks that remain are listed in
+[`THREAT-MODEL.md`](THREAT-MODEL.md#residual-risks). It has been verified on one production site; an
+earlier version of Tor has run on several sites. Report problems through GitHub's private
+vulnerability reporting (Security tab), not as a public issue.
 
 Tor is an [Orchard Core](https://orchardcore.net/) module that lets Active Directory domain accounts
 sign in on Orchard's own login page. A companion feature, **Tor Account**, gives each signed-in user
@@ -49,9 +50,10 @@ Tor is MIT licensed (see [`LICENSE`](LICENSE)).
   reached. They are throttled and logged like domain sign-ins.
 - **Audit logging.**
   - Every sign-in attempt, successful or not, writes one line to the logger `Tor.Audit`: the
-    outcome, the reason for a failure, the user name as typed (control characters, line and paragraph separators and invisible
-    format characters such as bidirectional overrides removed, at most 128 characters), the client address and whether it was a local or a directory sign-in. Never a
-    password.
+    outcome, the reason for a failure, the user name as typed (control characters, line and
+    paragraph separators and invisible format characters such as bidirectional overrides removed,
+    at most 128 characters), the client address and whether it was a local or a directory
+    sign-in. Never a password.
   - Directory sign-ins raise the same Orchard login events as Orchard's own login (see
     [Orchard's login checks](#orchards-login-checks)). With Orchard's **Users Audit Trail** feature
     enabled, a successful sign-in is recorded in Orchard's **Audit Trail** as "Logged in", a failed
@@ -72,9 +74,10 @@ More detail on a sign-in:
 3. Orchard's login-form event `LoggingInAsync` is raised for every subscriber (this is where, for
    example, Orchard's reCAPTCHA checks the form). If any subscriber reports an error or fails, the
    sign-in is refused **before any directory call**.
-4. A password longer than 256 characters is refused, and counted as a failure, before the throttle
-   and any directory call. Then Tor's throttle is checked. The name may be `name`, `DOMAIN\name` (NetBIOS or DNS domain name of
-   the configured domain) or a user principal name. Anything else fails.
+4. If Tor's settings have a problem (see [Configuration](#configuration)), the sign-in is refused.
+   A password longer than 256 characters is refused, and counted as a failure. Then Tor's throttle
+   is checked, and the attempt counted, in one step. The name may be `name`, `DOMAIN\name` (NetBIOS
+   or DNS domain name of the configured domain) or a user principal name. Anything else fails.
 5. Tor binds as the user and reads, with that bind: the bind's own identity (WhoAmI), the user's
    object (SID, `sAMAccountName`, UPN, display name, mail, account control flags, expiry) and its
    `tokenGroups`, and the SIDs of the mapped groups.
@@ -331,7 +334,10 @@ Location choices. `LoginFilterTests.cs` checks the directory sign-in against Orc
 sequence with stand-ins for the directory, the Orchard user and Orchard's login events: the order of
 the events, no directory call after a login-form error, one failure event per failure, one success
 event per success, no cookie on any failure, the same answer for every failure, and no password in
-any log line or event. No unit test contacts a domain controller.
+any log line or event. `HardeningTests.cs` holds one section per fix from the security review: the
+login password limit, the return-address rule, the log text, the settings check, the throttle (one
+count per person, hashed keys, the cap, parallel attempts), the break-glass answer, the absolute
+session lifetime, the cache headers and the picture size. No unit test contacts a domain controller.
 
 `DomainIntegrationTests.cs` runs against a real domain from a domain-joined Windows machine. It
 reads two test accounts' credentials from Windows Credential Manager (targets `Tor-Test-Member` and
@@ -352,21 +358,29 @@ a password.
 - **"Remember me" is ignored** for directory sign-ins: the cookie is never persistent.
 - **No single sign-on.** Users type their domain password on the site's login page; there is no
   Kerberos or Windows integrated sign-in.
-- **Preview release.** A line-by-line security review of this release is in progress and is not yet
-  complete.
+- **Preview release.** A line-by-line security review of 0.1.0-preview has been done and its fixes
+  are in this release. The remaining risks are listed in [`THREAT-MODEL.md`](THREAT-MODEL.md#residual-risks).
+- **One feature in this version.** Tor Account holds both the sign-in and the account page (see
+  [Features](#features)).
 - **This release is verified on one production site only**, on Windows Server with IIS, Orchard
   Core 3.0.1 and .NET 10. An earlier version of Tor has run on several sites.
 - **LDAPS required.** LDAPS is the default and the configuration that was used in production; the
   password change works only over LDAPS. The signed-and-sealed LDAP fallback for sign-in exists but
   is not recommended.
 - **Throttling is in memory, per process.** An application restart clears the counts, and several
-  web servers each count separately. The domain's own lockout policy still applies.
+  web servers each count separately. When the table is full, the oldest windows are dropped. The
+  domain's own lockout policy still applies.
+- **Sessions end after 12 hours** by default (`MaxSessionHours`), whatever the activity: users sign
+  in again.
 - **Role mapping is only as narrow as its configuration.** Only `Administrator` (and Orchard's admin
   role) is guarded by `AllowAdministratorMapping`. Any other role you map is granted as configured,
   including a custom role that carries administrator-level permissions.
 - **Pictures:** EXIF orientation is not applied (metadata is skipped on purpose), so a sideways phone
-  photo stays sideways. Picture processing uses SixLabors.ImageSharp 3.1.12 (through Orchard's
-  Media package), which has published advisories that NuGet audit reports at restore; see `NOTICE.md`.
+  photo stays sideways. Uploads over 16 million pixels are refused. Picture processing uses
+  SixLabors.ImageSharp 3.1.12 (through Orchard's Media package), which has published advisories that
+  NuGet audit reports at restore; see `NOTICE.md`. The fixed release, 3.2.0, is under the Six Labors
+  Split License and needs a Six Labors licence key for Release builds when a project references it
+  directly.
 - **The snapshot is as of the last sign-in or account action**, not live.
 
 ## Licence
