@@ -13,10 +13,14 @@ $ErrorActionPreference = 'Stop'
 $repo = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 if (Test-Path "$Drive\") { throw "$Drive is already in use; choose another drive with -Drive" }
 subst $Drive $repo
+# the release build uses exactly this SDK (global.json otherwise allows later 10.0 SDKs, which compile other bytes)
+$globalJson = Join-Path $repo 'global.json'
+$committedGlobalJson = [IO.File]::ReadAllBytes($globalJson)
 try {
+    [IO.File]::WriteAllText($globalJson, "{`n  `"sdk`": {`n    `"version`": `"10.0.401`",`n    `"rollForward`": `"disable`"`n  }`n}`n")
     Push-Location "$Drive\"
     $sdk = dotnet --version
-    if ($sdk -ne '10.0.401') { Write-Warning "SDK $sdk; the reference build uses 10.0.401, so the bytes may differ" }
+    if ($LASTEXITCODE -or $sdk -ne '10.0.401') { throw "the release build needs .NET SDK 10.0.401 installed (found: $sdk)" }
     dotnet restore Tor.slnx --locked-mode
     if ($LASTEXITCODE) { throw 'restore failed' }
     dotnet build src/Tor/Tor.csproj --no-restore -c Release -p:ContinuousIntegrationBuild=true
@@ -51,4 +55,5 @@ try {
 finally {
     Pop-Location
     subst $Drive /d
+    [IO.File]::WriteAllBytes($globalJson, $committedGlobalJson)
 }
