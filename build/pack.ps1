@@ -30,8 +30,9 @@ try {
     if ($LASTEXITCODE) { throw 'pack failed' }
 
     $packages = Get-ChildItem $target -File | Where-Object Extension -in '.nupkg', '.snupkg' | Sort-Object Name
-    $packages | ForEach-Object { "$((Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant())  $($_.Name)" } |
-        Set-Content (Join-Path $target 'SHA256SUMS') -Encoding ascii
+    # LF line endings, so "sha256sum -c SHA256SUMS" also works on Linux and macOS
+    $sums = $packages | ForEach-Object { "$((Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant())  $($_.Name)" }
+    [IO.File]::WriteAllText((Join-Path $target 'SHA256SUMS'), (($sums -join "`n") + "`n"))
 
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     $sha = [Security.Cryptography.SHA256]::Create()
@@ -48,7 +49,7 @@ try {
         }
         finally { $zip.Dispose() }
     }
-    $lines | Set-Content (Join-Path $target 'CONTENTSUMS') -Encoding ascii
+    [IO.File]::WriteAllText((Join-Path $target 'CONTENTSUMS'), (($lines -join "`n") + "`n"))
     Get-Content (Join-Path $target 'SHA256SUMS')
     Get-Content (Join-Path $target 'CONTENTSUMS')
 }
