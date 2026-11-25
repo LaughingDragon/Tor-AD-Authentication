@@ -11,6 +11,12 @@ updates:
       orchard-core:
         patterns:
           - "OrchardCore.*"
+    # System.* and Microsoft.* majors follow the .NET version (11.x is for .NET 11); move them with the target framework
+    ignore:
+      - dependency-name: "System.*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "Microsoft.*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: "/"
