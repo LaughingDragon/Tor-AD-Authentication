@@ -35,6 +35,8 @@ Tor is MIT licensed (see [`LICENSE`](LICENSE)).
     ignored with a warning; Tor does not create roles. A user whose mapped roles all cannot be
     granted is refused.
   - The effective mapping (group and role names only) is written to the `Tor.Audit` log at start-up.
+- The number of local (break-glass) accounts in `LocalAccounts`, never their names, is written to
+  the `Tor.Audit` log at start-up, with a warning when the list is empty.
 - **Sign-in throttling.** Failed sign-ins are counted per user name and per client address in a
   fixed window. The defaults are **5 failures per user name** and **20 failures per client address**
   in **15 minutes**, and all three are configurable (`MaxFailuresPerUser`, `MaxFailuresPerClient`,
@@ -172,11 +174,12 @@ SourceLink. Until that package is published on nuget.org, install from source.
 
 ### Features
 
-In this version the module declares one feature, **Tor Account** (`Tor.Account`), and Orchard puts
-both the directory sign-in and the account page under it. To turn on directory sign-in, enable **Tor
-Account** under **Configuration > Features**; disabling it turns both off. A separate **Tor**
-feature for the sign-in alone, with **Tor Account** depending on it, is planned for the next
-version.
+The module has two features, under **Configuration > Features** in the Security category:
+
+- **Tor** (`Tor`): the directory sign-in on Orchard's login page. Enable it to turn on directory
+  sign-in; it depends on `OrchardCore.Users` and `OrchardCore.Roles`.
+- **Tor Account** (`Tor.Account`): the account page at `/account`. It depends on **Tor**, so enabling
+  it also enables the sign-in; disabling **Tor** also disables it.
 
 To build and test this repository on its own:
 
@@ -360,8 +363,6 @@ a password.
   Kerberos or Windows integrated sign-in.
 - **Preview release.** A line-by-line security review of 0.1.0-preview has been done and its fixes
   are in this release. The remaining risks are listed in [`THREAT-MODEL.md`](THREAT-MODEL.md#residual-risks).
-- **One feature in this version.** Tor Account holds both the sign-in and the account page (see
-  [Features](#features)).
 - **This release is verified on one production site only**, on Windows Server with IIS, Orchard
   Core 3.0.1 and .NET 10. An earlier version of Tor has run on several sites.
 - **LDAPS required.** LDAPS is the default and the configuration that was used in production; the

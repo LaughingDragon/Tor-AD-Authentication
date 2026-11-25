@@ -16,6 +16,7 @@ using Tor.Services;
 
 namespace Tor;
 
+[Feature("Tor")]
 public sealed class Startup : StartupBase
 {
     private readonly IShellConfiguration _configuration;

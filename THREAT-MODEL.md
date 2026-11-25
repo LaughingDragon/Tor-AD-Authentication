@@ -1,7 +1,7 @@
 # Threat model
 
-This is the threat model for Tor 0.1.0-preview.1: the directory sign-in and the account page (in this version both
-belong to the **Tor Account** feature; a separate **Tor** feature for the sign-in is planned).
+This is the threat model for Tor 0.1.0-preview.1: the directory sign-in (the **Tor** feature) and the account page
+(the **Tor Account** feature, which depends on **Tor**).
 It describes what Tor protects, where the trust boundaries are, which attackers it considers, how each threat
 is handled and what risk remains. The last section maps Tor's controls to OWASP ASVS 4.0.3 level 2. That table
 shows where the design is **aligned with** ASVS. It is not a certification or a claim of compliance, and the
@@ -92,10 +92,9 @@ These remain in 0.1.0-preview.1, after the fixes from the line-by-line security 
 2. **The throttle is in memory and per process.** A restart clears it, and several servers count separately. When its table is full (50,000 windows), the oldest windows are dropped, so an attacker with many addresses can make old counts be forgotten sooner.
 3. **A user principal name with another suffix** (an alternative UPN suffix of the forest) has its own count, separate from the plain name.
 4. **Disabling a user in the directory does not end an Orchard session at once.** The session ends at the latest when the absolute lifetime (12 hours by default) is reached; the next sign-in is refused.
-5. **One feature holds both the sign-in and the account page** in this version, so directory sign-in cannot be enabled without the account page.
-6. **Site pictures are in the Media library.** Unless the site protects media (for example with Orchard's Secure Media feature), anyone who learns a picture's random address can fetch it.
-7. **Inherited package advisories.** SixLabors.ImageSharp 3.1.12 (through OrchardCore.Media 3.0.1) and MySqlConnector 2.4.0 (through YesSql) have published advisories. Tor's own decoding uses only the JPEG and PNG decoders with metadata skipped, which avoids the affected code paths. The fixed ImageSharp release (3.2.0) is under the Six Labors Split License and needs a licence key for Release builds when it is referenced directly.
-8. **Response timing against a real domain was not measured.** With stand-ins every failure cause takes the same time to answer; a real bind that fails may take longer or shorter than a refusal before the bind.
+5. **Site pictures are in the Media library.** Unless the site protects media (for example with Orchard's Secure Media feature), anyone who learns a picture's random address can fetch it.
+6. **Inherited package advisories.** SixLabors.ImageSharp 3.1.12 (through OrchardCore.Media 3.0.1) and MySqlConnector 2.4.0 (through YesSql) have published advisories. Tor's own decoding uses only the JPEG and PNG decoders with metadata skipped, which avoids the affected code paths. The fixed ImageSharp release (3.2.0) is under the Six Labors Split License and needs a licence key for Release builds when it is referenced directly.
+7. **Response timing against a real domain was not measured.** With stand-ins every failure cause takes the same time to answer; a real bind that fails may take longer or shorter than a refusal before the bind.
 
 ## OWASP ASVS 4.0.3 level 2
 
@@ -119,16 +118,16 @@ The table shows where the design is **aligned with** ASVS 4.0.3 level 2, where i
 | V5.3.7 | Protection against LDAP injection | RFC 4515 escaping; no user input in a DN | Aligned |
 | V7.1.1 | No credentials in logs | Never logged; tested | Aligned |
 | V7.3.1 | Log injection prevented | Control, separator and format characters removed, length capped | Aligned |
-| V7.4.1 | Generic error message | One answer for every sign-in failure, break-glass included | Aligned, with residual risk 8 |
+| V7.4.1 | Generic error message | One answer for every sign-in failure, break-glass included | Aligned, with residual risk 7 |
 | V8.2.1 | Anti-caching headers on sensitive data | `private, no-store` on every `/account` response | Aligned |
-| V8.3.4 | Sensitive data identified and protected | Snapshot capped and stored on the user; photo private to the user | Aligned, with residual risk 6 |
+| V8.3.4 | Sensitive data identified and protected | Snapshot capped and stored on the user; photo private to the user | Aligned, with residual risk 5 |
 | V9.2.1 | Connections to servers use trusted TLS certificates | LDAPS validated by the OS, name matched | Aligned |
 | V9.2.2 | Encrypted connections to back-end systems | LDAPS default; LDAP mode signed and sealed, with a start-up warning | Aligned |
 | V12.1.1 | File size limits | 2 MB, before decoding; 16 million pixels | Aligned |
 | V12.2.1 | Files checked to be of the expected type | Signature and decoding, JPEG and PNG only | Aligned |
 | V12.3.1 | User-supplied file names not used | Random file names in the user's own folder | Aligned |
-| V12.4.1 | Untrusted files stored outside the web root | Media library | **Partly aligned** (residual risk 6) |
+| V12.4.1 | Untrusted files stored outside the web root | Media library | **Partly aligned** (residual risk 5) |
 | V12.5.2 | Uploaded files never executed | Re-encoded JPEG served as `image/jpeg` with `nosniff` | Aligned |
-| V14.2.1 | Components up to date, without known vulnerabilities | Inherited advisories in ImageSharp and MySqlConnector | **Not aligned** (residual risk 7) |
+| V14.2.1 | Components up to date, without known vulnerabilities | Inherited advisories in ImageSharp and MySqlConnector | **Not aligned** (residual risk 6) |
 | V14.4.3 | `X-Content-Type-Options: nosniff` | On the picture responses | Aligned |
 | (no single ASVS 4 item) | Configuration validated at start-up, secure defaults | Secure defaults; settings checked, directory sign-in fails closed on a problem | Aligned |

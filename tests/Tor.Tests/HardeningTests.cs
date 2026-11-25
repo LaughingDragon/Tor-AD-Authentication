@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OrchardCore.DisplayManagement.Notify;
 using OrchardCore.Environment.Shell.Configuration;
@@ -220,6 +221,34 @@ public class HardeningTests
         Assert.Contains(log.Messages, m => m.Contains("UseLdaps is false", StringComparison.Ordinal));
         Assert.Empty(TorOptionsCheck.Problems(With("Domain=corp.example.com")));
     }
+
+    [Fact]
+    public async Task The_number_of_local_accounts_is_logged_at_start_but_never_their_names()
+    {
+        var options = With("Domain=corp.example.com");
+        options.LocalAccounts = ["breakglass-one", "breakglass-two", " "];
+        var log = new ListLogger();
+
+        await new RoleMappingLog(RoleMapper.From(options), Microsoft.Extensions.Options.Options.Create(options), log).ActivatedAsync();
+
+        Assert.Single(log.Entries, e => e.Level == LogLevel.Information && e.Message == "Local accounts configured: 2");
+        Assert.DoesNotContain(log.Messages, m => m.Contains("LocalAccounts is empty", StringComparison.Ordinal));
+        Assert.DoesNotContain(log.Messages, m => m.Contains("breakglass-", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public async Task An_empty_local_account_list_is_logged_as_zero_with_a_warning()
+    {
+        var options = With("Domain=corp.example.com");
+        options.LocalAccounts = [];
+        var log = new ListLogger();
+
+        await new RoleMappingLog(RoleMapper.From(options), Microsoft.Extensions.Options.Options.Create(options), log).ActivatedAsync();
+
+        Assert.Single(log.Entries, e => e.Level == LogLevel.Information && e.Message == "Local accounts configured: 0");
+        Assert.Single(log.Entries, e => e.Level == LogLevel.Warning && e.Message.Contains("LocalAccounts is empty", StringComparison.Ordinal));
+    }
+
 
     // ---- item 6: at most 16 million pixels (about 64 MB decoded), checked from the header before decoding
     [Theory]

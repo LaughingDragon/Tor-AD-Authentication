@@ -12,6 +12,16 @@ using OrchardCore.Modules.Manifest;
     Dependencies = ["OrchardCore.Users", "OrchardCore.Roles"]
 )]
 
+// The module declares its features explicitly, so Orchard does not add the module itself as a feature: without this
+// one, "Tor" did not exist and the sign-in startup was mapped to the first feature declared (Tor.Account).
+[assembly: Feature(
+    Id = "Tor",
+    Name = "Tor",
+    Description = "Active Directory sign-in on the login page: LDAP bind as the user, group gate, managed roles.",
+    Category = "Security",
+    Dependencies = ["OrchardCore.Users", "OrchardCore.Roles"]
+)]
+
 [assembly: Feature(
     Id = "Tor.Account",
     Name = "Tor Account",

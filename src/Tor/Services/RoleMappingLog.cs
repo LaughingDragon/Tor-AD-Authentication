@@ -10,7 +10,8 @@ namespace Tor.Services;
 /// <summary>
 /// At tenant start: checks the settings (an error for each problem, a warning when LDAPS is off), builds the role
 /// mapping (which logs refused entries and the Administrator warning) and writes the effective mapping, group and
-/// role names only, to Tor's audit log.
+/// role names only, to Tor's audit log. It also logs how many local (break-glass) accounts are configured, never
+/// their names, and warns when there are none.
 /// </summary>
 public sealed class RoleMappingLog : ModularTenantEvents
 {
@@ -45,6 +46,14 @@ public sealed class RoleMappingLog : ModularTenantEvents
         if (_roleMapper.Map.Count == 0)
         {
             _audit.LogWarning("Role mapping is empty: no directory account can sign in until GroupRoles is configured.");
+        }
+
+        // the count only: the names of local (break-glass) accounts are never written to a log
+        var localAccounts = (_options.LocalAccounts ?? []).Count(name => !string.IsNullOrWhiteSpace(name));
+        _audit.LogInformation("Local accounts configured: {Count}", localAccounts);
+        if (localAccounts == 0)
+        {
+            _audit.LogWarning("LocalAccounts is empty: no local (break-glass) account can sign in, only directory accounts.");
         }
 
         return Task.CompletedTask;

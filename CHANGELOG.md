@@ -8,9 +8,14 @@ The risks that remain are listed in `THREAT-MODEL.md` (Residual risks).
 - **Package:** published as `LaughingDragon.OrchardCore.ActiveDirectory`, with symbols, SourceLink
   and no local build paths in the assembly or the symbols. The manifest version is now the package
   version.
-- **Documentation:** the README describes the package, and that this version has one feature
-  (Tor Account) that holds both the sign-in and the account page. Configuration examples use
-  neutral group and role names.
+- **Features:** the module now declares a **Tor** feature for the directory sign-in, and **Tor
+  Account** (the account page) depends on it. Before, the module declared only Tor Account, so Orchard
+  never created **Tor** and put the sign-in under Tor Account. Sites that had Tor Account enabled get
+  **Tor** enabled with it as its dependency.
+- **Start-up log:** the number of local (break-glass) accounts configured, never their names, is
+  written to `Tor.Audit` at start-up, with a warning when `LocalAccounts` is empty.
+- **Documentation:** the README describes the package and its two features. Configuration examples
+  use neutral group and role names.
 - **No caching of account responses:** every response from `/account`, the pictures included, is
   sent with `Cache-Control: private, no-store` (the pictures were `private, no-cache`).
 - **Login password limit:** a password longer than 256 characters (the limit the account forms
