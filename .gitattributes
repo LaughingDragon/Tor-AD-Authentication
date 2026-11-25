@@ -1,0 +1,6 @@
+# Every checkout gets the line endings as committed (LF), whatever the git settings of the machine, so local and CI
+# builds compile, embed and pack the same bytes (see build/pack.ps1).
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.ico binary
