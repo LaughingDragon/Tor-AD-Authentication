@@ -94,9 +94,11 @@ public class PictureTests
     public void Metadata_does_not_survive()
     {
         using var image = new Image<Rgba32>(120, 80, Color.CornflowerBlue);
-        image.Metadata.ExifProfile = new ExifProfile();
-        image.Metadata.ExifProfile.SetValue(ExifTag.Artist, "someone");
-        image.Metadata.ExifProfile.SetValue(ExifTag.GPSLatitudeRef, "N");
+        // ImageSharp 3.2 refuses an empty EXIF profile, so the profile gets its values before it is attached
+        var exif = new ExifProfile();
+        exif.SetValue(ExifTag.Artist, "someone");
+        exif.SetValue(ExifTag.GPSLatitudeRef, "N");
+        image.Metadata.ExifProfile = exif;
         using var input = new MemoryStream();
         image.SaveAsJpeg(input);
 

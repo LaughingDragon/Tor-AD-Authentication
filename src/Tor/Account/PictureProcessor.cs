@@ -44,7 +44,8 @@ public static class PictureProcessor
         Configuration = new Configuration(new JpegConfigurationModule(), new PngConfigurationModule()),
         MaxFrames = 1,
 
-        // no ICC, EXIF or XMP parsing at all: ImageSharp 3.1.12 has an ICC parsing advisory (GHSA-gwg2-r3hj-4w44).
+        // no ICC, EXIF or XMP parsing at all: the least decoder surface (ImageSharp before 3.2.0 had an ICC parsing
+        // advisory, GHSA-gwg2-r3hj-4w44).
         // The price: EXIF rotation is not applied, so a sideways phone photo stays sideways.
         SkipMetadata = true,
     };

@@ -93,7 +93,7 @@ These remain in 0.1.0-preview.1, after the fixes from the line-by-line security 
 3. **A user principal name with another suffix** (an alternative UPN suffix of the forest) has its own count, separate from the plain name.
 4. **Disabling a user in the directory does not end an Orchard session at once.** The session ends at the latest when the absolute lifetime (12 hours by default) is reached; the next sign-in is refused.
 5. **Site pictures are in the Media library.** Unless the site protects media (for example with Orchard's Secure Media feature), anyone who learns a picture's random address can fetch it.
-6. **Inherited package advisories.** SixLabors.ImageSharp 3.1.12 (through OrchardCore.Media 3.0.1) and MySqlConnector 2.4.0 (through YesSql) have published advisories. Tor's own decoding uses only the JPEG and PNG decoders with metadata skipped, which avoids the affected code paths. The fixed ImageSharp release (3.2.0) is under the Six Labors Split License and needs a licence key for Release builds when it is referenced directly.
+6. **Inherited package advisory.** MySqlConnector 2.4.0 (through YesSql, Orchard Core's data layer) has a published moderate advisory (GHSA-473q-m89c-ghf8). Tor does not use MySQL; the package is only loaded by a site that runs Orchard on MySQL, and the fix belongs to Orchard Core's dependency. SixLabors.ImageSharp is held at 3.2.1, which fixes the six advisories published for 3.1.12 (1.0.0).
 7. **Response timing against a real domain was not measured.** With stand-ins every failure cause takes the same time to answer; a real bind that fails may take longer or shorter than a refusal before the bind.
 
 ## OWASP ASVS 4.0.3 level 2
@@ -128,6 +128,6 @@ The table shows where the design is **aligned with** ASVS 4.0.3 level 2, where i
 | V12.3.1 | User-supplied file names not used | Random file names in the user's own folder | Aligned |
 | V12.4.1 | Untrusted files stored outside the web root | Media library | **Partly aligned** (residual risk 5) |
 | V12.5.2 | Uploaded files never executed | Re-encoded JPEG served as `image/jpeg` with `nosniff` | Aligned |
-| V14.2.1 | Components up to date, without known vulnerabilities | Inherited advisories in ImageSharp and MySqlConnector | **Not aligned** (residual risk 6) |
+| V14.2.1 | Components up to date, without known vulnerabilities | ImageSharp held at 3.2.1 (advisories fixed); one inherited MySqlConnector advisory | **Partly aligned** (residual risk 6) |
 | V14.4.3 | `X-Content-Type-Options: nosniff` | On the picture responses | Aligned |
 | (no single ASVS 4 item) | Configuration validated at start-up, secure defaults | Secure defaults; settings checked, directory sign-in fails closed on a problem | Aligned |

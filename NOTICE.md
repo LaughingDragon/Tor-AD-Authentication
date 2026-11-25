@@ -4,7 +4,7 @@ Tor is MIT licensed (see `LICENSE`). It is distributed as source only: this repo
 
 The list is every package in the restore of the module (`src/Tor/packages.lock.json`) and the test project (`tests/Tor.Tests/packages.lock.json`) for `net10.0`, with the licence each package declares in its own package metadata. "Module" means the package is part of the module's build; "Tests only" means only the test project uses it. The module also uses the `Microsoft.AspNetCore.App` shared framework that ships with .NET (MIT).
 
-Note on SixLabors.ImageSharp: the module does not reference it directly. It comes with Orchard Core's `OrchardCore.Media` package (through `SixLabors.ImageSharp.Web`), and `Directory.Packages.props` holds it at 3.1.12. The module's picture upload on the account page (`src/Tor/Account/PictureProcessor.cs`) uses it. Its Six Labors Split License grants Apache-2.0 only in the cases it lists; read the licence in the package before you build or ship.
+Note on SixLabors.ImageSharp: the module does not reference it directly. It comes with Orchard Core's `OrchardCore.Media` package (through `SixLabors.ImageSharp.Web`), and `Directory.Packages.props` holds it at 3.2.1 (the release that fixes the advisories on 3.1.12). The module's picture upload on the account page (`src/Tor/Account/PictureProcessor.cs`) uses it. Its Six Labors Split License grants Apache-2.0 only in the cases it lists; among them, use in open-source software and use as a transitive package dependency. Read the licence in the package before you build or ship. From 3.2.0, a project that references ImageSharp **directly** needs a Six Labors licence key for Release builds; Tor does not reference it directly, and neither does a site that gets it through Tor or Orchard Core.
 
 | Package | Version | Licence | Dependency | Used by |
 |---|---|---|---|---|
@@ -114,7 +114,7 @@ Note on SixLabors.ImageSharp: the module does not reference it directly. It come
 | OrchardCore.XmlRpc.Abstractions | 3.0.1 | BSD-3-Clause | Transitive | Module |
 | Parlot | 1.5.7 | BSD-3-Clause | Transitive | Module |
 | Shortcodes | 1.3.6 | MIT | Transitive | Module |
-| SixLabors.ImageSharp | 3.1.12 | Six Labors Split License 1.0 (Apache-2.0 for the cases it lists, otherwise a commercial licence) | Transitive (pinned) | Module |
+| SixLabors.ImageSharp | 3.2.1 | Six Labors Split License 1.0 (Apache-2.0 for the cases it lists, otherwise a commercial licence) | Transitive (pinned) | Module |
 | SixLabors.ImageSharp.Web | 3.2.0 | Six Labors Split License 1.0 (Apache-2.0 for the cases it lists, otherwise a commercial licence) | Transitive | Module |
 | SQLitePCLRaw.bundle_e_sqlite3 | 2.1.11 | Apache-2.0 | Transitive | Module |
 | SQLitePCLRaw.core | 2.1.11 | Apache-2.0 | Transitive | Module |

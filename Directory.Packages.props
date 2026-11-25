@@ -20,10 +20,11 @@
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
   </ItemGroup>
 
-  <!-- Transitive pins (same as the site this came from): SixLabors.ImageSharp comes with OrchardCore.Media and is
-       held at the same version as before; Pkcs is a patched version for a NuGet audit finding. -->
+  <!-- Transitive pins: SixLabors.ImageSharp comes with OrchardCore.Media (which asks for 3.1.11 or later) and is held
+       at 3.2.1, the release that fixes the six advisories on 3.1.12 (1.0.0). It stays a transitive pin, not a direct
+       reference. Pkcs is a patched version for a NuGet audit finding. -->
   <ItemGroup>
-    <PackageVersion Include="SixLabors.ImageSharp" Version="3.1.12" />
+    <PackageVersion Include="SixLabors.ImageSharp" Version="3.2.1" />
     <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
   </ItemGroup>
 </Project>
