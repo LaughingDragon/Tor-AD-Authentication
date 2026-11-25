@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0 (unreleased)
+## 1.0.0 (2026-11-25)
 
 The first stable release. Settings from 0.1.0-preview.1 load unchanged; no setting, default, feature
 id or permission changes.
@@ -23,6 +23,10 @@ id or permission changes.
   groups than the account page shows (the page shows 50; every mapped group still counts). No change
   in behaviour.
 - **Version:** the package, the assembly and the Orchard manifest are 1.0.0.
+- **Build:** `build/pack.ps1` builds the release package the same way locally and in CI (drive `T:`,
+  SDK 10.0.401, LF line endings from `.gitattributes`, `global.json` for the .NET 10 SDK); CI uploads
+  it. Both builds have the same contents; only the compression of the embedded sources in the symbols
+  differs.
 
 ## 0.1.0-preview.1 (2026-11-25)
 
