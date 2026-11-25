@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0-preview.1 (not yet released)
+## 0.1.0-preview.1 (2026-11-25)
 
 Fixes from the line-by-line security review of 0.1.0-preview, which has been done, and packaging.
 The risks that remain are listed in `THREAT-MODEL.md` (Residual risks).
