@@ -53,3 +53,39 @@ jobs:
 
       - name: List vulnerable packages
         run: dotnet list Tor.slnx package --vulnerable --include-transitive
+
+  package:
+    # The release package, built by build/pack.ps1 exactly as it is built locally (drive T:, SDK 10.0.401,
+    # line endings as committed), so CONTENTSUMS can be compared with the local build.
+    name: Package (reproducible)
+    runs-on: windows-latest
+    timeout-minutes: 20
+    env:
+      DOTNET_NOLOGO: "true"
+      DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "true"
+    steps:
+      - name: Keep line endings as committed
+        run: git config --global core.autocrlf false
+
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up .NET SDK 10.0.401
+        uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          dotnet-version: 10.0.401
+
+      - name: Build and pack
+        shell: pwsh
+        run: ./build/pack.ps1 -Out out
+
+      - name: Upload the package
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: package
+          path: out/
+          if-no-files-found: error
+          retention-days: 30
