@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.0.0 (unreleased)
+
+The first stable release. Settings from 0.1.0-preview.1 load unchanged; no setting, default, feature
+id or permission changes.
+
+- **Compatibility promise:** within 1.x, setting keys, their defaults and ranges, the feature ids,
+  permission names and the `Tor.Audit` log texts only change in a new major version; anything to be
+  removed is marked deprecated here at least one minor release before. Everything covered is listed
+  in the new `docs/CONFIGURATION.md`. Tests check that 0.1.0-preview.1 settings still load, that the
+  defaults are the documented ones, and that the reference lists every setting.
+- **ImageSharp 3.2.1:** SixLabors.ImageSharp, which comes with Orchard's Media package, is now held at
+  3.2.1 instead of 3.1.12. This fixes the six advisories published for 3.1.12 (four rated High by
+  NuGet audit), none of which Tor's own picture code reached (it decodes JPEG and PNG only, without
+  metadata); Orchard's Media pipeline on the same site uses ImageSharp with its default formats.
+  It stays a transitive dependency, so no Six Labors licence key is needed to build Tor or a site
+  that uses it.
+- **Supported versions:** `SECURITY.md` and the README state what is supported (the latest 1.x) and
+  what was tested.
+
 ## 0.1.0-preview.1 (2026-11-25)
 
 Fixes from the line-by-line security review of 0.1.0-preview, which has been done, and packaging.

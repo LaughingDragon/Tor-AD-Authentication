@@ -150,6 +150,30 @@ What this was built and tested with:
 
 Other versions of Orchard Core or .NET have not been tested.
 
+### Tested with
+
+| Component | Version | How |
+|---|---|---|
+| Orchard Core | 3.0.1 | Unit tests; scratch sites; one production site |
+| .NET | 10 (runtime 10.0.15, SDK 10.0) | Unit tests on Windows and Linux (CI); production on Windows |
+| Web server | IIS on Windows Server 2025 | Production |
+| Active Directory | Windows Server 2025 domain controller, domain and forest functional level 2025 | Production |
+| Transport | LDAPS (port 636), TLS 1.3, certificate from an internal two-tier certificate authority (issuing and root) | Production |
+
+LDAP on port 389 (`UseLdaps: false`) is covered by unit tests only. The real-domain tests in
+`DomainIntegrationTests.cs` need two test accounts and were not part of this pass. Other directory layouts are
+described in the release notes of each version, with what was and was not covered.
+
+## Supported versions and compatibility
+
+The latest 1.x release is supported; security fixes come as a new 1.x release (see
+[`SECURITY.md`](SECURITY.md)). Within 1.x, setting keys, their defaults and ranges, the feature
+ids, permission names and the `Tor.Audit` log texts only change in a new major version. A setting
+or behaviour that is to be removed is marked deprecated in [`CHANGELOG.md`](CHANGELOG.md) at least
+one minor release before. Every setting, feature, permission, claim and log event is listed in
+[`docs/CONFIGURATION.md`](docs/CONFIGURATION.md). Settings from 0.1.0-preview.1 load unchanged in
+1.0.
+
 ## Installation
 
 Tor is packaged as `LaughingDragon.OrchardCore.ActiveDirectory`, a NuGet package with symbols and
@@ -378,10 +402,9 @@ a password.
   including a custom role that carries administrator-level permissions.
 - **Pictures:** EXIF orientation is not applied (metadata is skipped on purpose), so a sideways phone
   photo stays sideways. Uploads over 16 million pixels are refused. Picture processing uses
-  SixLabors.ImageSharp 3.1.12 (through Orchard's Media package), which has published advisories that
-  NuGet audit reports at restore; see `NOTICE.md`. The fixed release, 3.2.0, is under the Six Labors
-  Split License and needs a Six Labors licence key for Release builds when a project references it
-  directly.
+  SixLabors.ImageSharp, which comes with Orchard's Media package; Tor holds it at 3.2.1, which fixes
+  the advisories published for 3.1.12. It is a transitive dependency, so no Six Labors licence key is
+  needed to build Tor or a site that uses it; see `NOTICE.md`.
 - **The snapshot is as of the last sign-in or account action**, not live.
 
 ## Licence
