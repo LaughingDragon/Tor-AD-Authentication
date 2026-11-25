@@ -18,6 +18,11 @@ id or permission changes.
   that uses it.
 - **Supported versions:** `SECURITY.md` and the README state what is supported (the latest 1.x) and
   what was tested.
+- **Group matching:** the check of the user's token against the managed groups is now a separate
+  function, with tests for nested groups, long group lists (3,000 groups in the token) and more mapped
+  groups than the account page shows (the page shows 50; every mapped group still counts). No change
+  in behaviour.
+- **Version:** the package, the assembly and the Orchard manifest are 1.0.0.
 
 ## 0.1.0-preview.1 (2026-11-25)
 

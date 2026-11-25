@@ -310,11 +310,26 @@ public sealed partial class DirectoryAuthenticator : IDirectoryAuthenticator
         var groups = (SearchResponse)connection.SendRequest(new SearchRequest(
             namingContext, $"(&(objectClass=group)(|{names}))", SearchScope.Subtree, "sAMAccountName", "objectSid"));
 
-        var member = new List<string>();
+        var found = new List<(string? Name, string? Sid)>();
         foreach (SearchResultEntry group in groups.Entries)
         {
             var groupSid = group.Attributes["objectSid"]?.GetValues(typeof(byte[])) is [byte[] bytes, ..] ? Sid.ToText(bytes) : null;
-            if (groupSid is not null && tokenSids.Contains(groupSid) && ReadString(group, "sAMAccountName") is { } name)
+            found.Add((ReadString(group, "sAMAccountName"), groupSid));
+        }
+
+        return MemberOf(tokenSids, found);
+    }
+
+    /// <summary>
+    /// The managed groups whose SID is in the user's token. tokenGroups already holds every security group the user is
+    /// in, directly or through nesting, so nesting needs no walk here; the order and length of the token do not matter.
+    /// </summary>
+    internal static List<string> MemberOf(IReadOnlySet<string> tokenSids, IEnumerable<(string? Name, string? Sid)> managedGroups)
+    {
+        var member = new List<string>();
+        foreach (var (name, sid) in managedGroups)
+        {
+            if (sid is not null && name is not null && tokenSids.Contains(sid))
             {
                 member.Add(name);
             }

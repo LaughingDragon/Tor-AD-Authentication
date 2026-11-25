@@ -1,9 +1,11 @@
 # Tor: Active Directory sign-in for Orchard Core
 
-**Status: preview (0.1.0-preview.1).** A line-by-line security review of 0.1.0-preview has been done.
-This release contains its fixes; the risks that remain are listed in
-[`THREAT-MODEL.md`](THREAT-MODEL.md#residual-risks). It has been verified on one production site; an
-earlier version of Tor has run on several sites. Report problems through GitHub's private
+**Status: stable (1.0.0).** A line-by-line security review of 0.1.0-preview was done, and its
+checklist was run again on 1.0.0; the risks that remain are listed in
+[`THREAT-MODEL.md`](THREAT-MODEL.md#residual-risks). Its code, apart from the ImageSharp update, a small refactor of
+the group matching and new tests, has run on one production site since 0.1.0-preview.1; an earlier version of Tor has run
+on several sites. What 1.0 keeps stable is listed in
+[`docs/CONFIGURATION.md`](docs/CONFIGURATION.md). Report problems through GitHub's private
 vulnerability reporting (Security tab), not as a public issue.
 
 Tor is an [Orchard Core](https://orchardcore.net/) module that lets Active Directory domain accounts
@@ -385,10 +387,11 @@ a password.
 - **"Remember me" is ignored** for directory sign-ins: the cookie is never persistent.
 - **No single sign-on.** Users type their domain password on the site's login page; there is no
   Kerberos or Windows integrated sign-in.
-- **Preview release.** A line-by-line security review of 0.1.0-preview has been done and its fixes
-  are in this release. The remaining risks are listed in [`THREAT-MODEL.md`](THREAT-MODEL.md#residual-risks).
-- **This release is verified on one production site only**, on Windows Server with IIS, Orchard
-  Core 3.0.1 and .NET 10. An earlier version of Tor has run on several sites.
+- **Security review.** A line-by-line security review of 0.1.0-preview was done and its fixes
+  are in this release; its checklist was run again on 1.0.0. The remaining risks are listed in
+  [`THREAT-MODEL.md`](THREAT-MODEL.md#residual-risks).
+- **Verified on one production site only**, on Windows Server with IIS, Orchard Core 3.0.1 and
+  .NET 10 (see "Tested with"). An earlier version of Tor has run on several sites.
 - **LDAPS required.** LDAPS is the default and the configuration that was used in production; the
   password change works only over LDAPS. The signed-and-sealed LDAP fallback for sign-in exists but
   is not recommended.

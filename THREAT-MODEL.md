@@ -1,6 +1,6 @@
 # Threat model
 
-This is the threat model for Tor 0.1.0-preview.1: the directory sign-in (the **Tor** feature) and the account page
+This is the threat model for Tor 1.0.0: the directory sign-in (the **Tor** feature) and the account page
 (the **Tor Account** feature, which depends on **Tor**).
 It describes what Tor protects, where the trust boundaries are, which attackers it considers, how each threat
 is handled and what risk remains. The last section maps Tor's controls to OWASP ASVS 4.0.3 level 2. That table
@@ -86,7 +86,7 @@ Out of scope: an attacker with administrator access to the web server, the Orcha
 
 ## Residual risks
 
-These remain in 0.1.0-preview.1, after the fixes from the line-by-line security review of 0.1.0-preview.
+These remain in 1.0.0, after the fixes from the line-by-line security review of 0.1.0-preview and the review of 1.0.0.
 
 1. **Anyone can lock out a named user for the window.** Five failures for a name, from any address, block that name for 15 minutes, and continued failures also count towards the domain's own lockout. This is the price of per-name throttling.
 2. **The throttle is in memory and per process.** A restart clears it, and several servers count separately. When its table is full (50,000 windows), the oldest windows are dropped, so an attacker with many addresses can make old counts be forgotten sooner.

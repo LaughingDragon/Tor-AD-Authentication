@@ -104,7 +104,10 @@ picture), `POST /account/password`, `POST /account/picture`, `POST /account/cont
 | Information / Warning | `Account action: user={UserName} client={Client} action={Action} attributes={Attributes} outcome={Outcome}` (Warning when the action failed) |
 | Information | `Local accounts configured: {Count}` (at tenant start) |
 | Warning | `LocalAccounts is empty: no local (break-glass) account can sign in, only directory accounts.` |
+| Information | `Role mapping loaded: {Count} entries ({Entries}); AllowAdministratorMapping={Allow}` (at tenant start; the entries are group -> role pairs) |
 | Warning | `Role mapping is empty: no directory account can sign in until GroupRoles is configured.` |
+| Error | `Tor configuration: {Problem}; every directory sign-in is refused until it is fixed.` (at tenant start, one line per problem) |
+| Warning | `Tor configuration: UseLdaps is false, so sign-in uses LDAP on port 389 (signed and sealed) and the password change is refused.` |
 
 The `reason` values of a failed sign-in: `bad credentials`, `account disabled`, `account locked`,
 `account expired`, `password expired`, `account not readable`, `directory unavailable`,
@@ -115,14 +118,12 @@ The `reason` values of a failed sign-in: `bad credentials`, `account disabled`, 
 `SID could not be stored`, `two-factor account: not supported for directory sign-in`,
 `Tor is not configured correctly`, `local login refused`, `refused`,
 `login form check failed ({event handler})`, `Orchard login check refused ({event handler})` and
-`error {exception type}`. Of the directory failures, only `directory unavailable`, `rate limited` and `Tor is not configured
-correctly` do not count towards the throttle.
+`error {exception type}`. Of the directory failures, only `directory unavailable`, `rate limited`
+and `Tor is not configured correctly` do not count towards the throttle.
 
-**Tor's other loggers** (class names under `Tor.`): start-up and configuration messages, all
-beginning with `Tor` or `Tor configuration:`, for example `Tor configuration: {Problem}; every
-directory sign-in is refused until it is fixed.`, the `UseLdaps` and `AllowAdministratorMapping`
-warnings, ignored `GroupRoles` entries, and failures of other modules' login handlers. These texts
-may gain detail in a minor release; the `Tor.Audit` texts above do not change within 1.x.
+**Tor's other loggers** (class names under `Tor.`): messages that begin with `Tor:`, for example the
+`AllowAdministratorMapping` warning, ignored `GroupRoles` entries, roles that do not exist, and
+failures of other modules' login handlers. These texts may gain detail in a minor release; the `Tor.Audit` texts above do not change within 1.x.
 
 **Orchard's Audit Trail** (when Orchard's Audit Trail is enabled):
 
