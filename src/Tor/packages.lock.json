@@ -220,9 +220,9 @@
       },
       "System.DirectoryServices.Protocols": {
         "type": "Direct",
-        "requested": "[10.0.14, )",
-        "resolved": "10.0.14",
-        "contentHash": "uZAVEVyWAhQxtKIIoNYCzbtKhcIMHjY0viEbmkfpTZ9O/4fzOTlYHUAqirOL8anzBmSAx8xOk7o7R86mBgTfzQ=="
+        "requested": "[10.0.15, )",
+        "resolved": "10.0.15",
+        "contentHash": "VEiti20nQKFx5SjmlxaLJ3mPpDInxH6D2J2jislLF1pmp3aKyrh87E/pqczt1P9f0Pdc5QbpySnEJcniDKjmCg=="
       },
       "AnyAscii": {
         "type": "Transitive",

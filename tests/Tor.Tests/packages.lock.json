@@ -1252,7 +1252,7 @@
           "OrchardCore.Module.Targets": "[3.0.1, )",
           "OrchardCore.Users.Core": "[3.0.1, )",
           "OrchardCore.Workflows.Abstractions": "[3.0.1, )",
-          "System.DirectoryServices.Protocols": "[10.0.14, )"
+          "System.DirectoryServices.Protocols": "[10.0.15, )"
         }
       },
       "OrchardCore.AuditTrail.Abstractions": {
@@ -1479,9 +1479,9 @@
       },
       "System.DirectoryServices.Protocols": {
         "type": "CentralTransitive",
-        "requested": "[10.0.14, )",
-        "resolved": "10.0.14",
-        "contentHash": "uZAVEVyWAhQxtKIIoNYCzbtKhcIMHjY0viEbmkfpTZ9O/4fzOTlYHUAqirOL8anzBmSAx8xOk7o7R86mBgTfzQ=="
+        "requested": "[10.0.15, )",
+        "resolved": "10.0.15",
+        "contentHash": "VEiti20nQKFx5SjmlxaLJ3mPpDInxH6D2J2jislLF1pmp3aKyrh87E/pqczt1P9f0Pdc5QbpySnEJcniDKjmCg=="
       },
       "System.Security.Cryptography.Pkcs": {
         "type": "CentralTransitive",

@@ -10,7 +10,7 @@
     <PackageVersion Include="OrchardCore.Media" Version="3.0.1" />
     <PackageVersion Include="OrchardCore.AuditTrail.Abstractions" Version="3.0.1" />
     <PackageVersion Include="OrchardCore.Workflows.Abstractions" Version="3.0.1" />
-    <PackageVersion Include="System.DirectoryServices.Protocols" Version="10.0.14" />
+    <PackageVersion Include="System.DirectoryServices.Protocols" Version="10.0.15" />
   </ItemGroup>
 
   <!-- Tests -->
